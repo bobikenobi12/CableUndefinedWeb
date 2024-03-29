@@ -2,6 +2,7 @@ import { apiSlice } from "@/redux/api/api-slice";
 import { SocketEvent, SocketNamespace } from "@/types/socket";
 import { getSocket } from "@/utils/socket";
 import type { Diagram } from "@/types/diagrams";
+import { Microcontroller } from "@/types/diagrams";
 
 export const diagramsApiSlice = apiSlice.injectEndpoints({
 	endpoints: (build) => ({
@@ -28,8 +29,11 @@ export const diagramsApiSlice = apiSlice.injectEndpoints({
 			providesTags: (result) =>
 				result ? [{ type: "Diagrams", id: "LIST" }] : [],
 		}),
-		createDiagram: build.mutation({
-			queryFn: (body: { name: string }) => {
+		createDiagram: build.mutation<
+			Diagram,
+			{ name: string; microcontroller: Microcontroller }
+		>({
+			queryFn: (body: { name: string; microcontroller: string }) => {
 				const socket = getSocket(SocketNamespace.DIAGRAMS);
 
 				socket.emit(SocketEvent.CREATE_DIAGRAM, {
