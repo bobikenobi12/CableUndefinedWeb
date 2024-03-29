@@ -47,7 +47,7 @@ export function UserCombobox() {
 								src="https://images.clerk.dev/oauth_github/img_2Phl0Zuonoq3M8XXD6GV1jKveyF.png"
 							/>
 						</span>
-						<span className="truncate">
+						<span className="line-clamp-1 font-semibold">
 							{user?.username ?? "User"}
 						</span>
 					</div>

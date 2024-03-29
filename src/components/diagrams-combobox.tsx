@@ -74,7 +74,7 @@ export function DiagramsCombobox() {
 					aria-expanded={open}
 					className="w-[220px] justify-between p-0"
 				>
-					<div className="flex items-center gap-2">
+					<div className="flex items-center gap-2 w-full">
 						<div
 							className="mr-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-primary
 						 p-0 font-bold text-primary-foreground"
@@ -85,7 +85,7 @@ export function DiagramsCombobox() {
 									: "D"}
 							</span>
 						</div>
-						<span className="truncate">
+						<span className="line-clamp-1 font-semibold">
 							{currentDiagram
 								? currentDiagram.name
 								: "Select diagram"}
