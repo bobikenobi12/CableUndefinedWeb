@@ -3,14 +3,12 @@ import { RootState } from "@/redux/store";
 import { partMappings } from "@/types/wokwi-elements-mapping";
 
 export interface DiagramsElement {
-	id: number;
+	id: string;
 	x: number;
 	y: number;
 	name: string;
 	angle: number;
 	locked: boolean;
-	version: number;
-	updated: number;
 }
 
 interface DiagramsState {

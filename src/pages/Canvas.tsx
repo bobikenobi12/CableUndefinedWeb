@@ -19,14 +19,26 @@ import {
 	addElement,
 	deleteElement,
 } from "@/redux/features/diagrams/wokwi-elements-slice";
+
+import { useAddPartMutation } from "@/redux/features/parts/parts-api-slice";
+
 import ElementContextMenu from "@/components/canvas/element-context.menu";
 
 import { partMappings } from "@/types/wokwi-elements-mapping";
 import { Button } from "@/components/ui/button";
 
+import { useParams } from "react-router-dom";
+
+import "@b.borisov/cu-elements";
+
 const Canvas: React.FC = () => {
+	const { id } = useParams();
+
 	const elements = useAppSelector(getAllElements);
 	const showGrid = useAppSelector(getShowGrid);
+
+	const [addPart, { isLoading: isLoadingAddPartMutation }] =
+		useAddPartMutation();
 
 	const { toast, dismiss } = useToast();
 	const dispatch = useAppDispatch();
@@ -51,7 +63,7 @@ const Canvas: React.FC = () => {
 	}, []);
 
 	return (
-		<div className="flex h-full">
+		<div className="mx-auto flex max-w-7xl grow py-6">
 			<div className="flex flex-col w-fit-content p-2 space-y-2">
 				<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
 					Choose Elements:
@@ -65,32 +77,36 @@ const Canvas: React.FC = () => {
 							key={idx}
 							className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 cursor-pointer select-none dark:hover:bg-gray-800"
 							onClick={() => {
-								dispatch(
-									addElement({
-										id: idx,
-										x: 0,
-										y: 0,
-										name,
-										angle: 0,
-										locked: false,
-										version: 1,
-										updated: Date.now(),
-									})
-								);
-								toast({
-									title: "Element added",
-									action: (
-										<Button
-											onClick={() => {
-												dispatch(deleteElement(idx));
-												dismiss();
-											}}
-										>
-											Undo
-										</Button>
-									),
-									description: `Added ${name} to canvas`,
-								});
+								try {
+									addPart({
+										_id: id as string,
+										part: {
+											name,
+											angle: 0,
+											x: 0,
+											y: 0,
+											locked: false,
+										},
+									});
+									toast({
+										title: "Element added",
+										action: (
+											<Button
+												onClick={() => {
+													dispatch(
+														deleteElement(idx)
+													);
+													dismiss();
+												}}
+											>
+												Undo
+											</Button>
+										),
+										description: `Added ${name} to canvas`,
+									});
+								} catch (error) {
+									console.error(error);
+								}
 							}}
 						>
 							{name}
@@ -98,7 +114,7 @@ const Canvas: React.FC = () => {
 					))}
 				</ScrollArea>
 			</div>
-			<div className="flex-1 relative">
+			<div className="flex-1 relative" id="canvas">
 				<ContextMenu>
 					<ContextMenuTrigger>
 						<div

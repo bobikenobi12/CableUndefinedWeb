@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
 import { useGetDiagramsQuery } from "@/redux/features/diagrams/diagrams-api-slice";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function Dashboard() {
 	const navigate = useNavigate();
