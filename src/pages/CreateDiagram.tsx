@@ -31,6 +31,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
 import { useCreateDiagramMutation } from "@/redux/features/diagrams/diagrams-api-slice";
+import { useAddPartMutation } from "@/redux/features/parts/parts-api-slice";
+
 import { Microcontroller } from "@/types/diagrams";
 
 import { useToast } from "@/components/ui/use-toast";
@@ -52,6 +54,7 @@ export default function CreateDiagram() {
 	const { toast } = useToast();
 
 	const [createDiagram, { isLoading }] = useCreateDiagramMutation();
+	const [addPart] = useAddPartMutation();
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
@@ -66,12 +69,50 @@ export default function CreateDiagram() {
 			createDiagram({
 				name: data.name,
 				microcontroller: data.microcontroller,
-			});
-			toast({
-				title: "Success",
-				description: "Diagram created successfully.",
-			});
-			navigate("/dashboard");
+			})
+				.unwrap()
+				.then((res) => {
+					const diagramId = res._id;
+					// add 2 breadboards and 1 microcontroller to the diagram
+					addPart({
+						_id: diagramId,
+						part: {
+							x: 150,
+							y: 250,
+							name: "MCU Breadboard",
+							locked: false,
+							angle: 90,
+							version: 1,
+						},
+					});
+					addPart({
+						_id: diagramId,
+						part: {
+							x: 300,
+							y: 250,
+							name: "Main Breadboard",
+							locked: false,
+							angle: 90,
+							version: 1,
+						},
+					});
+					addPart({
+						_id: diagramId,
+						part: {
+							x: 150,
+							y: 150,
+							name: data.microcontroller,
+							locked: false,
+							angle: 0,
+							version: 1,
+						},
+					});
+					toast({
+						title: "Success",
+						description: "Diagram created successfully.",
+					});
+					navigate("/dashboard");
+				});
 		} catch (error) {
 			toast({
 				title: "Error",

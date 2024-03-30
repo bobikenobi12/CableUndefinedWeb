@@ -1,13 +1,14 @@
-interface Part {
-	id: number;
+interface AddPart {
 	x: number;
 	y: number;
 	name: string;
-	type: string;
 	angle: number;
 	locked: boolean;
 	version: number;
-	updated: number;
 }
 
-export type { Part };
+interface Part extends AddPart {
+	_id: string;
+}
+
+export type { Part, AddPart };

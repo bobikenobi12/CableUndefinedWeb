@@ -1,11 +1,11 @@
 import { apiSlice } from "@/redux/api/api-slice";
-import { Part } from "@/types/parts";
+import { AddPart, Part } from "@/types/parts";
 import { SocketEvent, SocketNamespace } from "@/types/socket";
 import { getSocket } from "@/utils/socket";
 
 const partsApiSlice = apiSlice.injectEndpoints({
 	endpoints: (build) => ({
-		addPart: build.mutation<void, { _id: string; part: Part }>({
+		addPart: build.mutation<Part, { _id: string; part: AddPart }>({
 			queryFn: ({ _id, part }) => {
 				const socket = getSocket(SocketNamespace.DIAGRAMS);
 
@@ -28,7 +28,7 @@ const partsApiSlice = apiSlice.injectEndpoints({
 				});
 			},
 		}),
-		updatePart: build.mutation<void, { _id: string; part: Partial<Part> }>({
+		updatePart: build.mutation<Part, { _id: string; part: AddPart }>({
 			queryFn: ({ _id, part }) => {
 				const socket = getSocket(SocketNamespace.DIAGRAMS);
 
