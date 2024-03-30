@@ -11,7 +11,16 @@ const partMappings: WokwiElementsMapping = {
 	"Arduino Uno": new wokwiElements.ArduinoUnoElement(),
 	"Big Sound Sensor": new wokwiElements.BigSoundSensorElement(),
 	"Biaxial Stepper": new wokwiElements.BiaxialStepperElement(),
-	Breadboard: new wokwiElements.BreadboardElement(),
+	"MCU Board": (() => {
+		const mcuBreadboard = new wokwiElements.BreadboardElement();
+		mcuBreadboard.type = "small";
+		return mcuBreadboard;
+	})(),
+	"Main Breadboard": (() => {
+		const mainBreadboard = new wokwiElements.BreadboardElement();
+		mainBreadboard.type = "normal";
+		return mainBreadboard;
+	})(),
 	Buzzer: new wokwiElements.BuzzerElement(),
 	DHT22: new wokwiElements.Dht22Element(),
 	"DIP Switch 8": new wokwiElements.DipSwitch8Element(),
