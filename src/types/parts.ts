@@ -4,7 +4,6 @@ interface AddPart {
 	name: string;
 	angle: number;
 	locked: boolean;
-	version: number;
 }
 
 interface Part extends AddPart {

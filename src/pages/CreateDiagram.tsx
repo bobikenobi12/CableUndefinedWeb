@@ -82,9 +82,9 @@ export default function CreateDiagram() {
 							name: "MCU Breadboard",
 							locked: false,
 							angle: 90,
-							version: 1,
 						},
 					});
+
 					addPart({
 						_id: diagramId,
 						part: {
@@ -93,7 +93,6 @@ export default function CreateDiagram() {
 							name: "Main Breadboard",
 							locked: false,
 							angle: 90,
-							version: 1,
 						},
 					});
 					addPart({
@@ -104,7 +103,6 @@ export default function CreateDiagram() {
 							name: data.microcontroller,
 							locked: false,
 							angle: 0,
-							version: 1,
 						},
 					});
 					toast({
@@ -154,7 +152,7 @@ export default function CreateDiagram() {
 											<FormLabel>
 												Microcontroller *
 											</FormLabel>
-											<Select>
+											<Select {...field}>
 												<SelectTrigger>
 													<SelectValue placeholder="Select a microcontroller" />
 												</SelectTrigger>
@@ -168,7 +166,7 @@ export default function CreateDiagram() {
 																Microcontroller.ATTiny85
 															}
 														>
-															ATTiny85
+															ATTiny85 (Default)
 														</SelectItem>
 														<SelectItem
 															value={
