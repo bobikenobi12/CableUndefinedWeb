@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
 import { useGetDiagramsQuery } from "@/redux/features/diagrams/diagrams-api-slice";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function Dashboard() {
 	const navigate = useNavigate();
@@ -17,8 +17,8 @@ export default function Dashboard() {
 	}
 
 	return (
-		<>
-			<PageHeader className="flex flex-col md:flex-row justify-between">
+		<div className="mx-auto flex max-w-7xl grow flex-col py-6">
+			<PageHeader className="flex w-full flex-col-reverse items-center justify-between gap-4 px-6 md:flex-row">
 				<PageHeaderHeading>Your Diagrams</PageHeaderHeading>
 				<Button onClick={() => navigate("/dashboard/new")}>
 					<Plus />
@@ -27,7 +27,10 @@ export default function Dashboard() {
 					</span>
 				</Button>
 			</PageHeader>
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+			<ul
+				className="flex w-full flex-col items-center justify-center gap-2 overflow-y-auto p-6 md:grid md:grid-cols-2 md:gap-0 lg:grid-cols-3"
+				role="list"
+			>
 				{diagrams ? (
 					diagrams.map((diagram) => (
 						<Card
@@ -60,7 +63,7 @@ export default function Dashboard() {
 				) : (
 					<div>No diagrams found</div>
 				)}
-			</div>
-		</>
+			</ul>
+		</div>
 	);
 }

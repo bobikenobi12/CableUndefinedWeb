@@ -42,6 +42,8 @@ import {
 	selectOpenUpdateProfile,
 } from "@/redux/features/auth/auth-handler-slice";
 
+import { ModeToggle } from "./mode-toggle";
+
 const updateUserSchema = z.object({
 	username: z.string().min(3, {
 		message: "Username must be at least 3 characters long",
@@ -69,7 +71,9 @@ function ProfileStripe({
 			<div className="border-b">
 				<h2>{header}</h2>
 			</div>
-			<div className="flex flex-row items-center gap-2">{children}</div>
+			<div className="flex flex-row items-center justify-between">
+				{children}
+			</div>
 		</div>
 	);
 }
@@ -222,6 +226,16 @@ export function Profile() {
 								</div>
 							</div>
 						</ProfileStripe>
+						<ProfileStripe header="Appearance">
+							<div className="flex flex-col gap-1">
+								<p className="text-sm">Theme</p>
+								<p className="text-xs text-muted-foreground">
+									Change the appearance of the app
+								</p>
+							</div>
+							<ModeToggle />
+						</ProfileStripe>
+
 						<ProfileStripe header="Danger Zone">
 							<div className="flex flex-col gap-1">
 								<p className="text-sm">Delete your account</p>

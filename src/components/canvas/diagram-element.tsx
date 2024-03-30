@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
@@ -7,7 +7,7 @@ import {
 } from "@/redux/features/diagrams/wokwi-elements-slice";
 
 interface ElementProps {
-	id: number;
+	id: string;
 	children?: React.ReactNode;
 }
 
@@ -15,6 +15,7 @@ export default function DiagramElement({
 	id,
 	children,
 }: ElementProps): JSX.Element {
+	const [tempPosition, setTempPosition] = useState({ x: 0, y: 0 });
 	const dispatch = useAppDispatch();
 	const element = useAppSelector((state) =>
 		getAllElements(state).find((el) => el.id === id)
@@ -23,11 +24,16 @@ export default function DiagramElement({
 	const [rotation, setRotation] = useState(0);
 
 	const handleDrag = (e: DraggableEvent, ui: DraggableData) => {
+		const { x, y } = ui;
+		setTempPosition({ x, y });
+	};
+
+	const handleStop = () => {
 		dispatch(
 			dragElement({
 				id,
-				x: ui.x,
-				y: ui.y,
+				x: tempPosition.x,
+				y: tempPosition.y,
 			})
 		);
 	};
@@ -38,6 +44,12 @@ export default function DiagramElement({
 	// 	onRotate(newRotation);
 	// };
 
+	useEffect(() => {
+		if (element) {
+			setTempPosition({ x: element.x, y: element.y });
+		}
+	}, [element]);
+
 	return (
 		<Draggable
 			nodeRef={nodeRef}
@@ -46,9 +58,13 @@ export default function DiagramElement({
 				y: element ? element.y : 0,
 			}}
 			onDrag={handleDrag}
+			onStop={handleStop}
 			// bounds="parent"
+			scale={1.3}
 			positionOffset={{ x: "100%", y: "10%" }}
 			key={id}
+			axis={element?.locked ? "none" : "both"}
+			// offsetParent={document.getElementById("canvas") as HTMLElement}
 		>
 			<div
 				ref={nodeRef}
@@ -56,23 +72,10 @@ export default function DiagramElement({
 					transform: `rotate(${rotation}deg)`,
 					position: "absolute",
 					transition: "transform 150ms ease",
-					cursor: "move",
 				}}
-				className="flex flex-col items-center space-y-2 p-2 bg-gray-100 rounded-md w-1/6"
+				className="flex flex-col items-center space-y-2 p-2 rounded-md w-1/6"
 			>
 				{children}
-				{element?.name}
-				<div
-					// onClick={handleRotate}
-					style={{
-						cursor: "pointer",
-						background: "gray",
-						padding: "5px",
-						borderRadius: "5px",
-					}}
-				>
-					Rotate
-				</div>
 			</div>
 		</Draggable>
 	);

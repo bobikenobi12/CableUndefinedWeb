@@ -67,8 +67,8 @@ export function Applayout() {
 
 	return (
 		<>
-			<div className="flex-grow flex flex-col">
-				<div className="flex justify-between items-center   mx-auto h-24 w-full max-w-7xl gap-x-6 p-6 sm:flex lg:px-8">
+			<div className="flex-grow flex flex-col h-full w-full">
+				<div className="flex justify-between items-center mx-auto h-24 w-full max-w-7xl gap-x-6 p-6 sm:flex lg:px-8">
 					<Breadcrumb>
 						<BreadcrumbList className="flex items-center space-x-2">
 							<BreadcrumbItem>
@@ -154,14 +154,14 @@ export function Applayout() {
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>
-				<div className="h-px w-screen bg-border" />
-				<div className="container px-4 md:px-8 flex-grow flex flex-col">
+				<div className="h-px w-screen bg-border flex-shrink-0" />
+				<div className="flex sm:h-[calc(100vh-6rem-1px)]">
 					<Outlet />
 				</div>
 			</div>
-			<div className="container px-4 md:px-8">
+			{/* <div className="container px-4 md:px-8">
 				<Footer />
-			</div>
+			</div> */}
 			<Profile />
 		</>
 	);

@@ -9,6 +9,9 @@ enum SocketEvent {
 	CREATE_DIAGRAM = "diagrams:create",
 	UPDATE_DIAGRAM = "diagrams:update",
 	DELETE_DIAGRAM = "diagrams:delete",
+	ADD_PART = "diagrams:parts:add",
+	UPDATE_PART = "diagrams:parts:update",
+	REMOVE_PART = "diagrams:parts:remove",
 }
 
 enum SocketNamespace {

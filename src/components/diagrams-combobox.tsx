@@ -20,6 +20,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 
+import { useLazyGetDiagramsQuery } from "@/redux/features/diagrams/diagrams-api-slice";
 import { useAppSelector } from "@/redux/hooks";
 import {
 	selectDiagrams,
@@ -29,9 +30,12 @@ import {
 import type { Diagram } from "@/types/diagrams";
 
 import { useNavigate, useParams } from "react-router-dom";
+import { Skeleton } from "./ui/skeleton";
 
 export function DiagramsCombobox() {
 	const { id } = useParams();
+
+	const [getDiagrams, { isLoading }] = useLazyGetDiagramsQuery();
 
 	const diagrams = useAppSelector(selectDiagrams);
 	const currentDiagramBySelector = useAppSelector((state) =>
@@ -45,13 +49,21 @@ export function DiagramsCombobox() {
 	React.useLayoutEffect(() => {
 		if (id) {
 			if (!currentDiagramBySelector) {
-				navigate("/not-found", { replace: true });
+				try {
+					getDiagrams();
+				} catch (error) {
+					navigate("/not-found", { replace: true });
+				}
 			}
 			setCurrentDiagram(currentDiagramBySelector);
 		} else {
 			navigate("/dashboard");
 		}
 	}, [diagrams]);
+
+	if (isLoading) {
+		return <Skeleton className="w-[220px] h-10" />;
+	}
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
@@ -62,7 +74,7 @@ export function DiagramsCombobox() {
 					aria-expanded={open}
 					className="w-[220px] justify-between p-0"
 				>
-					<div className="flex items-center gap-2">
+					<div className="flex items-center gap-2 w-full">
 						<div
 							className="mr-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-primary
 						 p-0 font-bold text-primary-foreground"
@@ -73,7 +85,7 @@ export function DiagramsCombobox() {
 									: "D"}
 							</span>
 						</div>
-						<span className="truncate">
+						<span className="line-clamp-1 font-semibold">
 							{currentDiagram
 								? currentDiagram.name
 								: "Select diagram"}

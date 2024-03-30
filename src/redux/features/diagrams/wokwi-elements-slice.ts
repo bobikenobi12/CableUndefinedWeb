@@ -1,23 +1,14 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { RootState } from "@/redux/store";
-import * as WokwiElements from "@b.borisov/cu-elements";
+import { partMappings } from "@/types/wokwi-elements-mapping";
 
-type WokwiElement<T> = Partial<T> & React.ClassAttributes<T>;
-
-type WokwiElementMap = {
-	[K in keyof typeof WokwiElements]: WokwiElement<(typeof WokwiElements)[K]>;
-};
-
-interface DiagramsElement {
-	id: number;
+export interface DiagramsElement {
+	id: string;
 	x: number;
 	y: number;
 	name: string;
-	type: keyof WokwiElementMap; // i need to use the actual wokwi element type here
 	angle: number;
 	locked: boolean;
-	version: number;
-	updated: number;
 }
 
 interface DiagramsState {
@@ -31,18 +22,17 @@ const initialState: DiagramsState = {
 };
 
 export const wokwiSlice = createSlice({
-	name: "diagrams",
+	name: "wokwi",
 	initialState,
 	reducers: {
 		toggleGrid: (state) => {
 			state.showGrid = !state.showGrid;
 			localStorage.setItem("showGrid", state.showGrid ? "true" : "false");
 		},
-		setElements: (state, action) => {
+		setElements: (state, action: { payload: DiagramsElement[] }) => {
 			state.elements = action.payload;
 		},
-		addElement: (state, action) => {
-			console.log(action.payload);
+		addElement: (state, action: { payload: DiagramsElement }) => {
 			state.elements.push(action.payload);
 		},
 		dragElement: (state, action) => {

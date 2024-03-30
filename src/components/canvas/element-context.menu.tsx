@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+
 import {
 	ContextMenu,
 	ContextMenuContent,
@@ -12,12 +14,10 @@ import {
 	DialogTitle,
 	DialogDescription,
 	DialogTrigger,
+	DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { DialogClose } from "@radix-ui/react-dialog";
-import { z } from "zod";
-import { SubmitHandler, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+
 import {
 	Form,
 	FormControl,
@@ -25,16 +25,32 @@ import {
 	FormItem,
 	FormMessage,
 } from "@/components/ui/form";
+
 import { Input } from "@/components/ui/input";
+
+import { useToast } from "../ui/use-toast";
+
+import { z } from "zod";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import { DialogFooter } from "@/components/ui/dialog";
 import { editElementName } from "@/redux/features/diagrams/wokwi-elements-slice";
 
 import DiagramElement from "@/components/canvas/diagram-element";
 import { useAppDispatch } from "@/redux/hooks";
-import { deleteElement } from "@/redux/features/diagrams/wokwi-elements-slice";
+
+import {
+	useRemovePartMutation,
+	useUpdatePartMutation,
+} from "@/redux/features/parts/parts-api-slice";
 
 import "@b.borisov/cu-elements";
-import { AnalogJoystickElement } from "@b.borisov/cu-elements";
+
+import { useParams } from "react-router-dom";
+
+import type { DiagramsElement } from "@/redux/features/diagrams/wokwi-elements-slice";
+import { partMappings } from "@/types/wokwi-elements-mapping";
 
 const schema = z.object({
 	name: z.string(),
@@ -46,7 +62,7 @@ const RenameElementForm = ({
 	id,
 	initialName,
 }: {
-	id: number;
+	id: string;
 	initialName: string;
 }) => {
 	const dispatch = useAppDispatch();
@@ -113,18 +129,49 @@ const RenameElementForm = ({
 	);
 };
 
+// for each LitElementWrapper, we need to render the ShowPinsElement and the current element
+// <wokwi-show-pins> --> partMappings["Show Pins"]
+// // element: DiagramsElement
+// </wokwi-show-pins>
+function LitElementWrapper({ element }: { element: DiagramsElement }) {
+	const elRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		const showPinsEl = partMappings["Show Pins"];
+		const elementEl = partMappings[element.name];
+
+		if (elRef.current && showPinsEl && elementEl) {
+			// Append the current element to the ShowPinsElement
+			showPinsEl.appendChild(elementEl.cloneNode(true));
+
+			// Append the ShowPinsElement to the main container
+			elRef.current.appendChild(showPinsEl.cloneNode(true));
+		}
+
+		return () => {
+			// Clean up function
+			elRef.current?.remove();
+		};
+	}, [element.name]);
+
+	return <div ref={elRef} className="w-full h-full"></div>;
+}
+
 export default function ElementContextMenu({
 	element,
 	idx,
 }: {
-	element: {
-		id: number;
-		type: string;
-		name: string;
-	};
+	element: DiagramsElement;
 	idx: number;
 }): JSX.Element {
-	const dispatch = useAppDispatch();
+	const { id } = useParams<{ id: string }>();
+
+	const [removePart, { isLoading: isLoadingRemovePartMutation }] =
+		useRemovePartMutation();
+	const [updatePart, { isLoading: isLoadingUpdatePartMutation }] =
+		useUpdatePartMutation();
+
+	const { toast } = useToast();
 
 	return (
 		<Dialog>
@@ -132,12 +179,12 @@ export default function ElementContextMenu({
 				<ContextMenuTrigger>
 					<DiagramElement key={idx} id={element.id}>
 						<div className="flex items-center space-x-2">
-							{element.type}
+							{element.name}
 						</div>
-						<wokwi-breadboard></wokwi-breadboard>
+						<LitElementWrapper element={element} key={idx} />
 					</DiagramElement>
 				</ContextMenuTrigger>
-				<ContextMenuContent>
+				<ContextMenuContent className="w-48">
 					<ContextMenuItem>
 						<DialogTrigger asChild>
 							<ContextMenuItem>Rename</ContextMenuItem>
@@ -146,7 +193,20 @@ export default function ElementContextMenu({
 					<ContextMenuItem>Move up</ContextMenuItem>
 					<ContextMenuItem>Rotate</ContextMenuItem>
 					<ContextMenuItem
-						onClick={() => dispatch(deleteElement(element.id))}
+						onClick={() => {
+							try {
+								removePart({
+									_id: id as string,
+									partId: element.id,
+								});
+								toast({
+									title: "Element removed",
+									description: `Removed ${element.name} from canvas`,
+								});
+							} catch (error) {
+								console.error(error);
+							}
+						}}
 						className="hover:text-red-500 cursor-pointer"
 					>
 						Remove
