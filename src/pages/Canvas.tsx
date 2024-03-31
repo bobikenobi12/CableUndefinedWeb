@@ -15,10 +15,10 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
 	toggleGrid,
 	getShowGrid,
-	getAllElements,
-	addElement,
 	deleteElement,
 } from "@/redux/features/diagrams/wokwi-elements-slice";
+
+import { selectDiagramById } from "@/redux/features/diagrams/diagrams-slice";
 
 import { useAddPartMutation } from "@/redux/features/parts/parts-api-slice";
 
@@ -29,12 +29,12 @@ import { Button } from "@/components/ui/button";
 
 import { useParams } from "react-router-dom";
 
-import "@b.borisov/cu-elements";
-
 const Canvas: React.FC = () => {
 	const { id } = useParams();
 
-	const elements = useAppSelector(getAllElements);
+	const diagram = useAppSelector((state) =>
+		selectDiagramById(state, id as string)
+	);
 	const showGrid = useAppSelector(getShowGrid);
 
 	const [addPart, { isLoading: isLoadingAddPartMutation }] =
@@ -114,24 +114,20 @@ const Canvas: React.FC = () => {
 					))}
 				</ScrollArea>
 			</div>
-			<div className="flex-1 relative" id="canvas">
-				<ContextMenu>
-					<ContextMenuTrigger>
-						<div
-							className={`flex-1 ${showGrid ? "scene-grid" : ""}`}
-						>
-							{elements.map((element, idx) => (
-								// <KeepScale>
-								<ElementContextMenu
-									key={idx}
-									element={element}
-									idx={idx}
-								/>
+			<div
+				className={`flex-1 relative ${showGrid ? "scene-grid" : ""}`}
+				id="canvas"
+			>
+				{/* <ContextMenu>
+					<ContextMenuTrigger> */}
+				{diagram &&
+					diagram.parts.map((part) => (
+						// <KeepScale>
+						<ElementContextMenu key={part._id} part={part} />
 
-								// </KeepScale>
-							))}
-						</div>
-					</ContextMenuTrigger>
+						// </KeepScale>
+					))}
+				{/* </ContextMenuTrigger>
 					<ContextMenuContent>
 						<ContextMenuCheckboxItem
 							checked={showGrid}
@@ -142,7 +138,7 @@ const Canvas: React.FC = () => {
 							</div>
 						</ContextMenuCheckboxItem>
 					</ContextMenuContent>
-				</ContextMenu>
+				</ContextMenu> */}
 			</div>
 		</div>
 	);

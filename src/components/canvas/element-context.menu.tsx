@@ -37,7 +37,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { DialogFooter } from "@/components/ui/dialog";
 import { editElementName } from "@/redux/features/diagrams/wokwi-elements-slice";
 
-import DiagramElement from "@/components/canvas/diagram-element";
+import DiagramPart from "@/components/canvas/diagram-part";
+
 import { useAppDispatch } from "@/redux/hooks";
 
 import {
@@ -49,7 +50,7 @@ import "@b.borisov/cu-elements";
 
 import { useParams } from "react-router-dom";
 
-import type { DiagramsElement } from "@/redux/features/diagrams/wokwi-elements-slice";
+import type { Part } from "@/types/parts";
 import { partMappings } from "@/types/wokwi-elements-mapping";
 
 const schema = z.object({
@@ -133,36 +134,27 @@ const RenameElementForm = ({
 // <wokwi-show-pins> --> partMappings["Show Pins"]
 // // element: DiagramsElement
 // </wokwi-show-pins>
-function LitElementWrapper({ element }: { element: DiagramsElement }) {
-	const elRef = useRef<HTMLDivElement>(null);
+function LitElementWrapper({ element }: { element: Part }) {
+	const containerRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		const showPinsEl = partMappings["Show Pins"];
-		const elementEl = partMappings[element.name];
-
-		if (elRef.current && showPinsEl && elementEl) {
-			// Append the current element to the ShowPinsElement
-			showPinsEl.appendChild(elementEl.cloneNode(true));
-
-			// Append the ShowPinsElement to the main container
-			elRef.current.appendChild(showPinsEl.cloneNode(true));
+		if (containerRef.current) {
+			const el = partMappings[element.name]; // HTMLElement
+			if (el) {
+				const showPins = partMappings["Show Pins"];
+				containerRef.current.appendChild(showPins);
+				containerRef.current.appendChild(el);
+			}
 		}
+	}, [element]);
 
-		return () => {
-			// Clean up function
-			elRef.current?.remove();
-		};
-	}, [element.name]);
-
-	return <div ref={elRef} className="w-full h-full"></div>;
+	return <div ref={containerRef}></div>;
 }
 
 export default function ElementContextMenu({
-	element,
-	idx,
+	part,
 }: {
-	element: DiagramsElement;
-	idx: number;
+	part: Part;
 }): JSX.Element {
 	const { id } = useParams<{ id: string }>();
 
@@ -174,15 +166,15 @@ export default function ElementContextMenu({
 	const { toast } = useToast();
 
 	return (
-		<Dialog>
+		<Dialog key={part._id}>
 			<ContextMenu>
 				<ContextMenuTrigger>
-					<DiagramElement key={idx} id={element.id}>
+					<DiagramPart id={part._id}>
 						<div className="flex items-center space-x-2">
-							{element.name}
+							{part.name}
 						</div>
-						<LitElementWrapper element={element} key={idx} />
-					</DiagramElement>
+						<LitElementWrapper element={part} />
+					</DiagramPart>
 				</ContextMenuTrigger>
 				<ContextMenuContent className="w-48">
 					<ContextMenuItem>
@@ -197,11 +189,11 @@ export default function ElementContextMenu({
 							try {
 								removePart({
 									_id: id as string,
-									partId: element.id,
+									partId: part._id,
 								});
 								toast({
 									title: "Element removed",
-									description: `Removed ${element.name} from canvas`,
+									description: `Removed ${part.name} from canvas`,
 								});
 							} catch (error) {
 								console.error(error);
@@ -220,7 +212,7 @@ export default function ElementContextMenu({
 						Enter a new name for the element
 					</DialogDescription>
 				</DialogHeader>
-				<RenameElementForm id={element.id} initialName={element.name} />
+				<RenameElementForm id={part._id} initialName={part.name} />
 			</DialogContent>
 		</Dialog>
 	);

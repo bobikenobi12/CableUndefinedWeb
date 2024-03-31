@@ -1,25 +1,30 @@
 import React, { useEffect, useRef, useState } from "react";
-import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import {
-	dragElement,
-	getAllElements,
-} from "@/redux/features/diagrams/wokwi-elements-slice";
 
-interface ElementProps {
+import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
+
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+
+import { dragPart } from "@/redux/features/diagrams/diagrams-slice";
+
+import { selectPartById } from "@/redux/features/diagrams/diagrams-slice";
+
+import { useParams } from "react-router-dom";
+interface PartProps {
 	id: string;
 	children?: React.ReactNode;
 }
 
-export default function DiagramElement({
-	id,
-	children,
-}: ElementProps): JSX.Element {
+export default function DiagramPart({ id, children }: PartProps): JSX.Element {
+	const { id: diagramId } = useParams<{ id: string }>();
+
 	const [tempPosition, setTempPosition] = useState({ x: 0, y: 0 });
+
 	const dispatch = useAppDispatch();
-	const element = useAppSelector((state) =>
-		getAllElements(state).find((el) => el.id === id)
+
+	const part = useAppSelector((state) =>
+		selectPartById(state, diagramId as string, id)
 	);
+
 	const nodeRef = useRef(null);
 	const [rotation, setRotation] = useState(0);
 
@@ -30,8 +35,9 @@ export default function DiagramElement({
 
 	const handleStop = () => {
 		dispatch(
-			dragElement({
-				id,
+			dragPart({
+				diagramId: diagramId as string,
+				partId: id,
 				x: tempPosition.x,
 				y: tempPosition.y,
 			})
@@ -45,17 +51,17 @@ export default function DiagramElement({
 	// };
 
 	useEffect(() => {
-		if (element) {
-			setTempPosition({ x: element.x, y: element.y });
+		if (part) {
+			setTempPosition({ x: part.x, y: part.y });
 		}
-	}, [element]);
+	}, [part]);
 
 	return (
 		<Draggable
 			nodeRef={nodeRef}
 			position={{
-				x: element ? element.x : 0,
-				y: element ? element.y : 0,
+				x: part ? part.x : 0,
+				y: part ? part.y : 0,
 			}}
 			onDrag={handleDrag}
 			onStop={handleStop}
@@ -63,7 +69,7 @@ export default function DiagramElement({
 			scale={1.3}
 			positionOffset={{ x: "100%", y: "10%" }}
 			key={id}
-			axis={element?.locked ? "none" : "both"}
+			axis={part?.locked ? "none" : "both"}
 			// offsetParent={document.getElementById("canvas") as HTMLElement}
 		>
 			<div

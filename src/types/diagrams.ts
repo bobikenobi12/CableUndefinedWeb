@@ -1,9 +1,11 @@
+import type { Part } from "./parts";
 interface Diagram {
 	_id: string;
 	createdAt: string;
 	updatedAt: string;
 	_owner: string;
 	name: string;
+	parts: Part[];
 }
 
 enum Microcontroller {
