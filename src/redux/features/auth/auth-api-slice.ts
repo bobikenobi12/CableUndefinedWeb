@@ -57,7 +57,6 @@ export const authApiSlice = apiSlice.injectEndpoints({
 
 				return new Promise((resolve, reject) => {
 					socket.on(SocketEvent.REGISTER, (data: any) => {
-						console.log(data);
 						if ("error" in data) {
 							reject(data.error);
 						} else {
@@ -70,7 +69,6 @@ export const authApiSlice = apiSlice.injectEndpoints({
 		logout: builder.mutation<void, void>({
 			queryFn: () => {
 				const socket = getSocket(SocketNamespace.AUTH);
-				console.log("logging out", localStorage.getItem("_token"));
 				socket.emit(SocketEvent.LOGOUT, {
 					token: localStorage.getItem("_token"),
 				});

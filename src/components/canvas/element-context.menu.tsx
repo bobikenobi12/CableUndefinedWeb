@@ -159,12 +159,31 @@ export default function ElementContextMenu({
 		useRemovePartMutation();
 
 	const { toast } = useToast();
+
+	useEffect(() => {
+		if (isLoadingRemovePartMutation) {
+			toast({
+				title: "Removing element",
+				description: `Removing ${part.name} from canvas`,
+			});
+		}
+
+		return () => {
+			if (!isLoadingRemovePartMutation) {
+				toast({
+					title: "Element removed",
+					description: `Removed ${part.name} from canvas`,
+				});
+			}
+		};
+	}, [isLoadingRemovePartMutation]);
+
 	return (
 		<div>
 			<Dialog>
 				<ContextMenu>
 					<ContextMenuTrigger>
-						<DiagramPart id={part._id}>
+						<DiagramPart part={part}>
 							<div className="flex items-center space-x-2">
 								{part.name}
 							</div>

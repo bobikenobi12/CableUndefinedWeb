@@ -40,7 +40,6 @@ export const partsApiSlice = apiSlice.injectEndpoints({
 		>({
 			queryFn: ({ _id, part }) => {
 				const socket = getSocket(SocketNamespace.DIAGRAMS);
-				console.log(part);
 				socket.emit(SocketEvent.UPDATE_PART, {
 					token: localStorage.getItem("_token"),
 					diagram: {
@@ -60,8 +59,8 @@ export const partsApiSlice = apiSlice.injectEndpoints({
 
 				return new Promise((resolve, reject) => {
 					socket.on(SocketEvent.UPDATE_PART, (data) => {
+						console.log(data);
 						if ("error" in data) {
-							console.error(data.error);
 							reject(data.error);
 						} else {
 							resolve({ data });
