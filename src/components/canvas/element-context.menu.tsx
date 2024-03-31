@@ -41,10 +41,7 @@ import DiagramPart from "@/components/canvas/diagram-part";
 
 import { useAppDispatch } from "@/redux/hooks";
 
-import {
-	useRemovePartMutation,
-	useUpdatePartMutation,
-} from "@/redux/features/parts/parts-api-slice";
+import { useRemovePartMutation } from "@/redux/features/parts/parts-api-slice";
 
 import "@b.borisov/cu-elements";
 
@@ -160,60 +157,59 @@ export default function ElementContextMenu({
 
 	const [removePart, { isLoading: isLoadingRemovePartMutation }] =
 		useRemovePartMutation();
-	const [updatePart, { isLoading: isLoadingUpdatePartMutation }] =
-		useUpdatePartMutation();
 
 	const { toast } = useToast();
-
 	return (
-		<Dialog key={part._id}>
-			<ContextMenu>
-				<ContextMenuTrigger>
-					<DiagramPart id={part._id}>
-						<div className="flex items-center space-x-2">
-							{part.name}
-						</div>
-						<LitElementWrapper element={part} />
-					</DiagramPart>
-				</ContextMenuTrigger>
-				<ContextMenuContent className="w-48">
-					<ContextMenuItem>
-						<DialogTrigger asChild>
-							<ContextMenuItem>Rename</ContextMenuItem>
-						</DialogTrigger>
-					</ContextMenuItem>
-					<ContextMenuItem>Move up</ContextMenuItem>
-					<ContextMenuItem>Rotate</ContextMenuItem>
-					<ContextMenuItem
-						onClick={() => {
-							try {
-								removePart({
-									_id: id as string,
-									partId: part._id,
-								});
-								toast({
-									title: "Element removed",
-									description: `Removed ${part.name} from canvas`,
-								});
-							} catch (error) {
-								console.error(error);
-							}
-						}}
-						className="hover:text-red-500 cursor-pointer"
-					>
-						Remove
-					</ContextMenuItem>
-				</ContextMenuContent>
-			</ContextMenu>
-			<DialogContent className="sm:max-w-md">
-				<DialogHeader>
-					<DialogTitle>Rename Element</DialogTitle>
-					<DialogDescription>
-						Enter a new name for the element
-					</DialogDescription>
-				</DialogHeader>
-				<RenameElementForm id={part._id} initialName={part.name} />
-			</DialogContent>
-		</Dialog>
+		<div>
+			<Dialog>
+				<ContextMenu>
+					<ContextMenuTrigger>
+						<DiagramPart id={part._id}>
+							<div className="flex items-center space-x-2">
+								{part.name}
+							</div>
+							<LitElementWrapper element={part} />
+						</DiagramPart>
+					</ContextMenuTrigger>
+					<ContextMenuContent className="w-48">
+						<ContextMenuItem>
+							<DialogTrigger asChild>
+								<ContextMenuItem>Rename</ContextMenuItem>
+							</DialogTrigger>
+						</ContextMenuItem>
+						<ContextMenuItem>Move up</ContextMenuItem>
+						<ContextMenuItem>Rotate</ContextMenuItem>
+						<ContextMenuItem
+							onClick={() => {
+								try {
+									removePart({
+										_id: id as string,
+										partId: part._id,
+									});
+									toast({
+										title: "Element removed",
+										description: `Removed ${part.name} from canvas`,
+									});
+								} catch (error) {
+									console.error(error);
+								}
+							}}
+							className="hover:text-red-500 cursor-pointer"
+						>
+							Remove
+						</ContextMenuItem>
+					</ContextMenuContent>
+				</ContextMenu>
+				<DialogContent className="sm:max-w-md">
+					<DialogHeader>
+						<DialogTitle>Rename Element</DialogTitle>
+						<DialogDescription>
+							Enter a new name for the element
+						</DialogDescription>
+					</DialogHeader>
+					<RenameElementForm id={part._id} initialName={part.name} />
+				</DialogContent>
+			</Dialog>
+		</div>
 	);
 }

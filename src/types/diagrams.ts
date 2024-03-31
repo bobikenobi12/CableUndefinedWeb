@@ -5,6 +5,7 @@ interface Diagram {
 	updatedAt: string;
 	_owner: string;
 	name: string;
+	microcontroller: Microcontroller;
 	parts: Part[];
 }
 

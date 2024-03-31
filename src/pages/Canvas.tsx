@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button";
 
 import { useParams } from "react-router-dom";
 
-const Canvas: React.FC = () => {
+export default function Canvas(): JSX.Element {
 	const { id } = useParams();
 
 	const diagram = useAppSelector((state) =>
@@ -116,14 +116,16 @@ const Canvas: React.FC = () => {
 			</div>
 			<div
 				className={`flex-1 relative ${showGrid ? "scene-grid" : ""}`}
-				id="canvas"
+				// id="canvas"
 			>
 				{/* <ContextMenu>
 					<ContextMenuTrigger> */}
 				{diagram &&
-					diagram.parts.map((part) => (
+					diagram.parts.map((part, idx) => (
 						// <KeepScale>
-						<ElementContextMenu key={part._id} part={part} />
+						<div key={idx}>
+							<ElementContextMenu part={part} />
+						</div>
 
 						// </KeepScale>
 					))}
@@ -142,6 +144,4 @@ const Canvas: React.FC = () => {
 			</div>
 		</div>
 	);
-};
-
-export default Canvas;
+}

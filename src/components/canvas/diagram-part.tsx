@@ -2,10 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 
 import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
 
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { useUpdatePartMutation } from "@/redux/features/parts/parts-api-slice";
 
-import { dragPart } from "@/redux/features/diagrams/diagrams-slice";
-
+import { useAppSelector } from "@/redux/hooks";
 import { selectPartById } from "@/redux/features/diagrams/diagrams-slice";
 
 import { useParams } from "react-router-dom";
@@ -17,9 +16,10 @@ interface PartProps {
 export default function DiagramPart({ id, children }: PartProps): JSX.Element {
 	const { id: diagramId } = useParams<{ id: string }>();
 
-	const [tempPosition, setTempPosition] = useState({ x: 0, y: 0 });
+	// const [tempPosition, setTempPosition] = useState({ x: 0, y: 0 });
 
-	const dispatch = useAppDispatch();
+	const [updatePart, { isLoading: isLoadingUpdatePartMutation }] =
+		useUpdatePartMutation();
 
 	const part = useAppSelector((state) =>
 		selectPartById(state, diagramId as string, id)
@@ -30,18 +30,24 @@ export default function DiagramPart({ id, children }: PartProps): JSX.Element {
 
 	const handleDrag = (e: DraggableEvent, ui: DraggableData) => {
 		const { x, y } = ui;
-		setTempPosition({ x, y });
+		// setTempPosition({ x, y });
 	};
 
-	const handleStop = () => {
-		dispatch(
-			dragPart({
-				diagramId: diagramId as string,
-				partId: id,
-				x: tempPosition.x,
-				y: tempPosition.y,
-			})
-		);
+	const handleStop = (e: DraggableEvent, ui: DraggableData) => {
+		if (part) {
+			try {
+				updatePart({
+					_id: diagramId as string,
+					part: {
+						...part,
+						x: ui.x,
+						y: ui.y,
+					},
+				}).unwrap();
+			} catch (error) {
+				console.error(error);
+			}
+		}
 	};
 
 	// const handleRotate = () => {
@@ -50,12 +56,13 @@ export default function DiagramPart({ id, children }: PartProps): JSX.Element {
 	// 	onRotate(newRotation);
 	// };
 
-	useEffect(() => {
-		if (part) {
-			setTempPosition({ x: part.x, y: part.y });
-		}
-	}, [part]);
+	// useEffect(() => {
+	// 	if (part) {
+	// 		setTempPosition({ x: part.x, y: part.y });
+	// 	}
+	// }, [part]);
 
+	console.log(part);
 	return (
 		<Draggable
 			nodeRef={nodeRef}
