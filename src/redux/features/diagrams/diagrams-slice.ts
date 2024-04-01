@@ -36,9 +36,7 @@ export const diagramsSlice = createSlice({
 			const { diagramId, partId, x, y } = action.payload;
 			const parts = state.partsByDiagramId[diagramId];
 			if (parts) {
-				const partIndex = parts.findIndex(
-					(part) => part._id === partId
-				);
+				const partIndex = parts.findIndex((part) => part.id === partId);
 				if (partIndex !== -1) {
 					state.partsByDiagramId[diagramId][partIndex].x = x;
 					state.partsByDiagramId[diagramId][partIndex].y = y;
@@ -104,6 +102,6 @@ export const selectPartById = (
 	state: RootState,
 	diagramId: string,
 	partId: string
-) => state.diagrams.partsByDiagramId[diagramId].find((p) => p._id === partId);
+) => state.diagrams.partsByDiagramId[diagramId].find((p) => p.id === partId);
 
 export default diagramsSlice.reducer;

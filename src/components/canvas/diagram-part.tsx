@@ -4,13 +4,10 @@ import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
 
 import { useUpdatePartMutation } from "@/redux/features/parts/parts-api-slice";
 
-import { useAppSelector } from "@/redux/hooks";
-import { selectPartById } from "@/redux/features/diagrams/diagrams-slice";
-
 import type { Part } from "@/types/parts";
 
 import { useParams } from "react-router-dom";
-
+import { toast } from "../ui/use-toast";
 interface PartProps {
 	part: Part;
 	children?: React.ReactNode;
@@ -46,10 +43,21 @@ export default function DiagramPart({
 						x: tempPosition.x,
 						y: tempPosition.y,
 					},
-				}).unwrap();
-				console.log("Part updated!");
+				})
+					.unwrap()
+					.then((res) => {
+						// set x and y because currently the part x and y get updated, but the element returns back to its initial spot and a little bit after returns to the new spot
+						const { x, y } = res.diagram.parts.find(
+							(p) => p.id === part.id
+						) as Part;
+
+						setTempPosition({ x, y });
+					});
 			} catch (error) {
-				console.error(error);
+				toast({
+					variant: "destructive",
+					value: "Failed to update part position.",
+				});
 			}
 		}
 	};
@@ -60,11 +68,11 @@ export default function DiagramPart({
 	// 	onRotate(newRotation);
 	// };
 
-	// useEffect(() => {
-	// 	if (part) {
-	// 		console.log(part);
-	// 	}
-	// }, [part]);
+	useEffect(() => {
+		if (part) {
+			setTempPosition({ x: part.x, y: part.y });
+		}
+	}, [part]);
 
 	return (
 		<Draggable

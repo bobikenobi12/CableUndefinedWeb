@@ -46,7 +46,7 @@ export const partsApiSlice = apiSlice.injectEndpoints({
 						_id,
 					},
 					part: {
-						id: part._id,
+						id: part.id,
 					},
 					update: {
 						x: part.x,
@@ -59,7 +59,6 @@ export const partsApiSlice = apiSlice.injectEndpoints({
 
 				return new Promise((resolve, reject) => {
 					socket.on(SocketEvent.UPDATE_PART, (data) => {
-						console.log(data);
 						if ("error" in data) {
 							reject(data.error);
 						} else {

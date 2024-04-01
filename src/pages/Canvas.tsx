@@ -4,6 +4,7 @@ import "@b.borisov/cu-elements";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
 	ContextMenu,
+	ContextMenuItem,
 	ContextMenuCheckboxItem,
 	ContextMenuContent,
 	ContextMenuTrigger,
@@ -20,17 +21,36 @@ import {
 
 import { selectDiagramById } from "@/redux/features/diagrams/diagrams-slice";
 
-import { useAddPartMutation } from "@/redux/features/parts/parts-api-slice";
+import {
+	useAddPartMutation,
+	useRemovePartMutation,
+} from "@/redux/features/parts/parts-api-slice";
 
-import ElementContextMenu from "@/components/canvas/element-context.menu";
+import ElementContextMenu, {
+	LitElementWrapper,
+	RenameElementForm,
+} from "@/components/canvas/element-context.menu";
 
 import { partMappings } from "@/types/wokwi-elements-mapping";
 import { Button } from "@/components/ui/button";
 
 import { useParams } from "react-router-dom";
+import DiagramPart from "@/components/canvas/diagram-part";
+
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogDescription,
+	DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function Canvas(): JSX.Element {
 	const { id } = useParams();
+
+	const [removePart, { isLoading: isLoadingRemovePartMutation }] =
+		useRemovePartMutation();
 
 	const diagram = useAppSelector((state) =>
 		selectDiagramById(state, id as string)
@@ -61,6 +81,23 @@ export default function Canvas(): JSX.Element {
 			);
 		};
 	}, []);
+
+	useEffect(() => {
+		if (isLoadingRemovePartMutation) {
+			toast({
+				title: "Removing element",
+				description: `Removing ${id} from canvas`,
+			});
+		}
+	}, [isLoadingRemovePartMutation]);
+
+	useEffect(() => {
+		if (!isLoadingRemovePartMutation) {
+			setTimeout(() => {
+				dismiss();
+			}, 3000);
+		}
+	}, [isLoadingRemovePartMutation]);
 
 	return (
 		<div className="mx-auto flex max-w-7xl grow py-6">
@@ -105,7 +142,11 @@ export default function Canvas(): JSX.Element {
 										description: `Added ${name} to canvas`,
 									});
 								} catch (error) {
-									console.error(error);
+									toast({
+										variant: "destructive",
+										title: "Failed to add element",
+										description: error as string,
+									});
 								}
 							}}
 						>
@@ -124,7 +165,71 @@ export default function Canvas(): JSX.Element {
 					diagram.parts.map((part, idx) => (
 						// <KeepScale>
 						<div key={idx}>
-							<ElementContextMenu part={part} />
+							<Dialog>
+								<ContextMenu>
+									<ContextMenuTrigger>
+										<DiagramPart part={part}>
+											<div className="flex items-center space-x-2">
+												{part.name}
+											</div>
+											<LitElementWrapper element={part} />
+										</DiagramPart>
+									</ContextMenuTrigger>
+									<ContextMenuContent className="w-48">
+										<ContextMenuItem>
+											<DialogTrigger asChild>
+												<ContextMenuItem>
+													Rename
+												</ContextMenuItem>
+											</DialogTrigger>
+										</ContextMenuItem>
+										<ContextMenuItem>
+											Move up
+										</ContextMenuItem>
+										<ContextMenuItem>
+											Rotate
+										</ContextMenuItem>
+										<ContextMenuItem
+											onClick={() => {
+												try {
+													removePart({
+														_id: id as string,
+														partId: part.id,
+													});
+													toast({
+														title: "Element removed",
+														description: `Removed ${part.name} from canvas`,
+													});
+												} catch (error) {
+													toast({
+														variant: "destructive",
+														title: "Failed to remove element",
+														description:
+															error as string,
+													});
+												}
+											}}
+											className="hover:text-red-500 cursor-pointer"
+										>
+											Remove
+										</ContextMenuItem>
+									</ContextMenuContent>
+								</ContextMenu>
+								<DialogContent className="sm:max-w-md">
+									<DialogHeader>
+										<DialogTitle>
+											Rename Element
+										</DialogTitle>
+										<DialogDescription>
+											Enter a new name for the element
+										</DialogDescription>
+									</DialogHeader>
+									<RenameElementForm
+										id={part.id}
+										initialName={part.name}
+									/>
+								</DialogContent>
+							</Dialog>
 						</div>
 
 						// </KeepScale>

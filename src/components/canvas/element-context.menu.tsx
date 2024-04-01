@@ -56,7 +56,7 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-const RenameElementForm = ({
+export const RenameElementForm = ({
 	id,
 	initialName,
 }: {
@@ -131,7 +131,7 @@ const RenameElementForm = ({
 // <wokwi-show-pins> --> partMappings["Show Pins"]
 // // element: DiagramsElement
 // </wokwi-show-pins>
-function LitElementWrapper({ element }: { element: Part }) {
+export function LitElementWrapper({ element }: { element: Part }) {
 	const containerRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -158,7 +158,7 @@ export default function ElementContextMenu({
 	const [removePart, { isLoading: isLoadingRemovePartMutation }] =
 		useRemovePartMutation();
 
-	const { toast } = useToast();
+	const { toast, dismiss } = useToast();
 
 	useEffect(() => {
 		if (isLoadingRemovePartMutation) {
@@ -167,68 +167,67 @@ export default function ElementContextMenu({
 				description: `Removing ${part.name} from canvas`,
 			});
 		}
+	}, [isLoadingRemovePartMutation]);
 
-		return () => {
-			if (!isLoadingRemovePartMutation) {
-				toast({
-					title: "Element removed",
-					description: `Removed ${part.name} from canvas`,
-				});
-			}
-		};
+	useEffect(() => {
+		if (!isLoadingRemovePartMutation) {
+			dismiss();
+		}
 	}, [isLoadingRemovePartMutation]);
 
 	return (
-		<div>
-			<Dialog>
-				<ContextMenu>
-					<ContextMenuTrigger>
-						<DiagramPart part={part}>
-							<div className="flex items-center space-x-2">
-								{part.name}
-							</div>
-							<LitElementWrapper element={part} />
-						</DiagramPart>
-					</ContextMenuTrigger>
-					<ContextMenuContent className="w-48">
-						<ContextMenuItem>
-							<DialogTrigger asChild>
-								<ContextMenuItem>Rename</ContextMenuItem>
-							</DialogTrigger>
-						</ContextMenuItem>
-						<ContextMenuItem>Move up</ContextMenuItem>
-						<ContextMenuItem>Rotate</ContextMenuItem>
-						<ContextMenuItem
-							onClick={() => {
-								try {
-									removePart({
-										_id: id as string,
-										partId: part._id,
-									});
-									toast({
-										title: "Element removed",
-										description: `Removed ${part.name} from canvas`,
-									});
-								} catch (error) {
-									console.error(error);
-								}
-							}}
-							className="hover:text-red-500 cursor-pointer"
-						>
-							Remove
-						</ContextMenuItem>
-					</ContextMenuContent>
-				</ContextMenu>
-				<DialogContent className="sm:max-w-md">
-					<DialogHeader>
-						<DialogTitle>Rename Element</DialogTitle>
-						<DialogDescription>
-							Enter a new name for the element
-						</DialogDescription>
-					</DialogHeader>
-					<RenameElementForm id={part._id} initialName={part.name} />
-				</DialogContent>
-			</Dialog>
-		</div>
+		<Dialog>
+			<ContextMenu>
+				<ContextMenuTrigger>
+					<DiagramPart part={part}>
+						<div className="flex items-center space-x-2">
+							{part.name}
+						</div>
+						<LitElementWrapper element={part} />
+					</DiagramPart>
+				</ContextMenuTrigger>
+				<ContextMenuContent className="w-48">
+					<ContextMenuItem>
+						<DialogTrigger asChild>
+							<ContextMenuItem>Rename</ContextMenuItem>
+						</DialogTrigger>
+					</ContextMenuItem>
+					<ContextMenuItem>Move up</ContextMenuItem>
+					<ContextMenuItem>Rotate</ContextMenuItem>
+					<ContextMenuItem
+						onClick={() => {
+							try {
+								removePart({
+									_id: id as string,
+									partId: part.id,
+								});
+								toast({
+									title: "Element removed",
+									description: `Removed ${part.name} from canvas`,
+								});
+							} catch (error) {
+								toast({
+									variant: "destructive",
+									title: "Failed to remove element",
+									description: error as string,
+								});
+							}
+						}}
+						className="hover:text-red-500 cursor-pointer"
+					>
+						Remove
+					</ContextMenuItem>
+				</ContextMenuContent>
+			</ContextMenu>
+			<DialogContent className="sm:max-w-md">
+				<DialogHeader>
+					<DialogTitle>Rename Element</DialogTitle>
+					<DialogDescription>
+						Enter a new name for the element
+					</DialogDescription>
+				</DialogHeader>
+				<RenameElementForm id={part.id} initialName={part.name} />
+			</DialogContent>
+		</Dialog>
 	);
 }
