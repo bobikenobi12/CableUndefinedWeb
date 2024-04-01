@@ -7,7 +7,7 @@ interface AddPart {
 }
 
 interface Part extends AddPart {
-	_id: string;
+	id: string;
 }
 
 export type { Part, AddPart };

@@ -82,7 +82,6 @@ export function UserRegisterForm({
 				description: "We've created your account for you.",
 			});
 		} catch (error) {
-			console.log(error);
 			toast({
 				title: "An error occurred.",
 				description: "Unable to create your account.",

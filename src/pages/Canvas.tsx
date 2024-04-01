@@ -4,6 +4,7 @@ import "@b.borisov/cu-elements";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
 	ContextMenu,
+	ContextMenuItem,
 	ContextMenuCheckboxItem,
 	ContextMenuContent,
 	ContextMenuTrigger,
@@ -15,26 +16,45 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
 	toggleGrid,
 	getShowGrid,
-	getAllElements,
-	addElement,
 	deleteElement,
 } from "@/redux/features/diagrams/wokwi-elements-slice";
 
-import { useAddPartMutation } from "@/redux/features/parts/parts-api-slice";
+import { selectDiagramById } from "@/redux/features/diagrams/diagrams-slice";
 
-import ElementContextMenu from "@/components/canvas/element-context.menu";
+import {
+	useAddPartMutation,
+	useRemovePartMutation,
+} from "@/redux/features/parts/parts-api-slice";
+
+import ElementContextMenu, {
+	LitElementWrapper,
+	RenameElementForm,
+} from "@/components/canvas/element-context.menu";
 
 import { partMappings } from "@/types/wokwi-elements-mapping";
 import { Button } from "@/components/ui/button";
 
 import { useParams } from "react-router-dom";
+import DiagramPart from "@/components/canvas/diagram-part";
 
-import "@b.borisov/cu-elements";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogDescription,
+	DialogTrigger,
+} from "@/components/ui/dialog";
 
-const Canvas: React.FC = () => {
+export default function Canvas(): JSX.Element {
 	const { id } = useParams();
 
-	const elements = useAppSelector(getAllElements);
+	const [removePart, { isLoading: isLoadingRemovePartMutation }] =
+		useRemovePartMutation();
+
+	const diagram = useAppSelector((state) =>
+		selectDiagramById(state, id as string)
+	);
 	const showGrid = useAppSelector(getShowGrid);
 
 	const [addPart, { isLoading: isLoadingAddPartMutation }] =
@@ -61,6 +81,23 @@ const Canvas: React.FC = () => {
 			);
 		};
 	}, []);
+
+	useEffect(() => {
+		if (isLoadingRemovePartMutation) {
+			toast({
+				title: "Removing element",
+				description: `Removing ${id} from canvas`,
+			});
+		}
+	}, [isLoadingRemovePartMutation]);
+
+	useEffect(() => {
+		if (!isLoadingRemovePartMutation) {
+			setTimeout(() => {
+				dismiss();
+			}, 3000);
+		}
+	}, [isLoadingRemovePartMutation]);
 
 	return (
 		<div className="mx-auto flex max-w-7xl grow py-6">
@@ -105,7 +142,11 @@ const Canvas: React.FC = () => {
 										description: `Added ${name} to canvas`,
 									});
 								} catch (error) {
-									console.error(error);
+									toast({
+										variant: "destructive",
+										title: "Failed to add element",
+										description: error as string,
+									});
 								}
 							}}
 						>
@@ -114,24 +155,86 @@ const Canvas: React.FC = () => {
 					))}
 				</ScrollArea>
 			</div>
-			<div className="flex-1 relative" id="canvas">
-				<ContextMenu>
-					<ContextMenuTrigger>
-						<div
-							className={`flex-1 ${showGrid ? "scene-grid" : ""}`}
-						>
-							{elements.map((element, idx) => (
-								// <KeepScale>
-								<ElementContextMenu
-									key={idx}
-									element={element}
-									idx={idx}
-								/>
-
-								// </KeepScale>
-							))}
+			<div
+				className={`flex-1 relative ${showGrid ? "scene-grid" : ""}`}
+				// id="canvas"
+			>
+				{/* <ContextMenu>
+					<ContextMenuTrigger> */}
+				{diagram &&
+					diagram.parts.map((part, idx) => (
+						// <KeepScale>
+						<div key={idx}>
+							<Dialog>
+								<ContextMenu>
+									<ContextMenuTrigger>
+										<DiagramPart part={part}>
+											<div className="flex items-center space-x-2">
+												{part.name}
+											</div>
+											<LitElementWrapper element={part} />
+										</DiagramPart>
+									</ContextMenuTrigger>
+									<ContextMenuContent className="w-48">
+										<ContextMenuItem>
+											<DialogTrigger asChild>
+												<ContextMenuItem>
+													Rename
+												</ContextMenuItem>
+											</DialogTrigger>
+										</ContextMenuItem>
+										<ContextMenuItem>
+											Move up
+										</ContextMenuItem>
+										<ContextMenuItem>
+											Rotate
+										</ContextMenuItem>
+										<ContextMenuItem
+											onClick={() => {
+												try {
+													removePart({
+														_id: id as string,
+														partId: part.id,
+													});
+													toast({
+														title: "Element removed",
+														description: `Removed ${part.name} from canvas`,
+													});
+												} catch (error) {
+													toast({
+														variant: "destructive",
+														title: "Failed to remove element",
+														description:
+															error as string,
+													});
+												}
+											}}
+											className="hover:text-red-500 cursor-pointer"
+										>
+											Remove
+										</ContextMenuItem>
+									</ContextMenuContent>
+								</ContextMenu>
+								<DialogContent className="sm:max-w-md">
+									<DialogHeader>
+										<DialogTitle>
+											Rename Element
+										</DialogTitle>
+										<DialogDescription>
+											Enter a new name for the element
+										</DialogDescription>
+									</DialogHeader>
+									<RenameElementForm
+										id={part.id}
+										initialName={part.name}
+									/>
+								</DialogContent>
+							</Dialog>
 						</div>
-					</ContextMenuTrigger>
+
+						// </KeepScale>
+					))}
+				{/* </ContextMenuTrigger>
 					<ContextMenuContent>
 						<ContextMenuCheckboxItem
 							checked={showGrid}
@@ -142,10 +245,8 @@ const Canvas: React.FC = () => {
 							</div>
 						</ContextMenuCheckboxItem>
 					</ContextMenuContent>
-				</ContextMenu>
+				</ContextMenu> */}
 			</div>
 		</div>
 	);
-};
-
-export default Canvas;
+}

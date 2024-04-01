@@ -63,7 +63,6 @@ export function UserLoginForm({ className, ...props }: UserLoginFormProps) {
 				description: "You have successfully logged in.",
 			});
 		} catch (error) {
-			console.log(error);
 			toast({
 				title: "An error occurred.",
 				description: "Unable to login to your account.",

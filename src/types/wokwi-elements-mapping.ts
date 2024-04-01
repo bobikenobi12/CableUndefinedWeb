@@ -11,7 +11,7 @@ const partMappings: WokwiElementsMapping = {
 	"Arduino Uno": new wokwiElements.ArduinoUnoElement(),
 	"Big Sound Sensor": new wokwiElements.BigSoundSensorElement(),
 	"Biaxial Stepper": new wokwiElements.BiaxialStepperElement(),
-	"MCU Board": (() => {
+	"MCU Breadboard": (() => {
 		const mcuBreadboard = new wokwiElements.BreadboardElement();
 		mcuBreadboard.type = "small";
 		return mcuBreadboard;

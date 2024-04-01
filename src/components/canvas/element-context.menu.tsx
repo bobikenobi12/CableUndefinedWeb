@@ -37,19 +37,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { DialogFooter } from "@/components/ui/dialog";
 import { editElementName } from "@/redux/features/diagrams/wokwi-elements-slice";
 
-import DiagramElement from "@/components/canvas/diagram-element";
+import DiagramPart from "@/components/canvas/diagram-part";
+
 import { useAppDispatch } from "@/redux/hooks";
 
-import {
-	useRemovePartMutation,
-	useUpdatePartMutation,
-} from "@/redux/features/parts/parts-api-slice";
+import { useRemovePartMutation } from "@/redux/features/parts/parts-api-slice";
 
 import "@b.borisov/cu-elements";
 
 import { useParams } from "react-router-dom";
 
-import type { DiagramsElement } from "@/redux/features/diagrams/wokwi-elements-slice";
+import type { Part } from "@/types/parts";
 import { partMappings } from "@/types/wokwi-elements-mapping";
 
 const schema = z.object({
@@ -58,7 +56,7 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-const RenameElementForm = ({
+export const RenameElementForm = ({
 	id,
 	initialName,
 }: {
@@ -133,56 +131,60 @@ const RenameElementForm = ({
 // <wokwi-show-pins> --> partMappings["Show Pins"]
 // // element: DiagramsElement
 // </wokwi-show-pins>
-function LitElementWrapper({ element }: { element: DiagramsElement }) {
-	const elRef = useRef<HTMLDivElement>(null);
+export function LitElementWrapper({ element }: { element: Part }) {
+	const containerRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		const showPinsEl = partMappings["Show Pins"];
-		const elementEl = partMappings[element.name];
-
-		if (elRef.current && showPinsEl && elementEl) {
-			// Append the current element to the ShowPinsElement
-			showPinsEl.appendChild(elementEl.cloneNode(true));
-
-			// Append the ShowPinsElement to the main container
-			elRef.current.appendChild(showPinsEl.cloneNode(true));
+		if (containerRef.current) {
+			const el = partMappings[element.name]; // HTMLElement
+			if (el) {
+				const showPins = partMappings["Show Pins"];
+				containerRef.current.appendChild(showPins);
+				containerRef.current.appendChild(el);
+			}
 		}
+	}, [element]);
 
-		return () => {
-			// Clean up function
-			elRef.current?.remove();
-		};
-	}, [element.name]);
-
-	return <div ref={elRef} className="w-full h-full"></div>;
+	return <div ref={containerRef}></div>;
 }
 
 export default function ElementContextMenu({
-	element,
-	idx,
+	part,
 }: {
-	element: DiagramsElement;
-	idx: number;
+	part: Part;
 }): JSX.Element {
 	const { id } = useParams<{ id: string }>();
 
 	const [removePart, { isLoading: isLoadingRemovePartMutation }] =
 		useRemovePartMutation();
-	const [updatePart, { isLoading: isLoadingUpdatePartMutation }] =
-		useUpdatePartMutation();
 
-	const { toast } = useToast();
+	const { toast, dismiss } = useToast();
+
+	useEffect(() => {
+		if (isLoadingRemovePartMutation) {
+			toast({
+				title: "Removing element",
+				description: `Removing ${part.name} from canvas`,
+			});
+		}
+	}, [isLoadingRemovePartMutation]);
+
+	useEffect(() => {
+		if (!isLoadingRemovePartMutation) {
+			dismiss();
+		}
+	}, [isLoadingRemovePartMutation]);
 
 	return (
 		<Dialog>
 			<ContextMenu>
 				<ContextMenuTrigger>
-					<DiagramElement key={idx} id={element.id}>
+					<DiagramPart part={part}>
 						<div className="flex items-center space-x-2">
-							{element.name}
+							{part.name}
 						</div>
-						<LitElementWrapper element={element} key={idx} />
-					</DiagramElement>
+						<LitElementWrapper element={part} />
+					</DiagramPart>
 				</ContextMenuTrigger>
 				<ContextMenuContent className="w-48">
 					<ContextMenuItem>
@@ -197,14 +199,18 @@ export default function ElementContextMenu({
 							try {
 								removePart({
 									_id: id as string,
-									partId: element.id,
+									partId: part.id,
 								});
 								toast({
 									title: "Element removed",
-									description: `Removed ${element.name} from canvas`,
+									description: `Removed ${part.name} from canvas`,
 								});
 							} catch (error) {
-								console.error(error);
+								toast({
+									variant: "destructive",
+									title: "Failed to remove element",
+									description: error as string,
+								});
 							}
 						}}
 						className="hover:text-red-500 cursor-pointer"
@@ -220,7 +226,7 @@ export default function ElementContextMenu({
 						Enter a new name for the element
 					</DialogDescription>
 				</DialogHeader>
-				<RenameElementForm id={element.id} initialName={element.name} />
+				<RenameElementForm id={part.id} initialName={part.name} />
 			</DialogContent>
 		</Dialog>
 	);
