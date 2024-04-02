@@ -5,7 +5,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
 	ContextMenu,
 	ContextMenuItem,
-	ContextMenuCheckboxItem,
 	ContextMenuContent,
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
@@ -26,12 +25,17 @@ import {
 	useRemovePartMutation,
 } from "@/redux/features/parts/parts-api-slice";
 
-import ElementContextMenu, {
-	LitElementWrapper,
-	RenameElementForm,
-} from "@/components/canvas/element-context.menu";
+import {
+	useCreateConnectionMutation,
+	useDeleteConnectionMutation,
+} from "@/redux/features/connections/connections-api-slice";
 
-import { partMappings } from "@/types/wokwi-elements-mapping";
+import { RenameElementForm } from "@/components/canvas/element-context.menu";
+
+import {
+	partMappings,
+	partTagsToConnectionStrings,
+} from "@/types/wokwi-elements-mapping";
 import { Button } from "@/components/ui/button";
 
 import { useParams } from "react-router-dom";
@@ -45,15 +49,25 @@ import {
 	DialogDescription,
 	DialogTrigger,
 } from "@/components/ui/dialog";
-
-import { partTagsToConnectionStrings } from "@/types/wokwi-elements-mapping";
-import { Connection } from "@/types/connections";
+import { Pin } from "@/types/connections";
 
 export default function Canvas(): JSX.Element {
-	const { id } = useParams();
+	const { id } = useParams<{ id: string }>();
+
+	const [connection, setConnection] = React.useState<{
+		0: Pin | "";
+		1: Pin | "";
+	}>({
+		0: "",
+		1: "",
+	});
 
 	const [removePart, { isLoading: isLoadingRemovePartMutation }] =
 		useRemovePartMutation();
+	const [removeConnection, { isLoading: isLoadingRemoveConnectionMutation }] =
+		useDeleteConnectionMutation();
+	const [createConnection, { isLoading: isLoadingCreateConnectionMutation }] =
+		useCreateConnectionMutation();
 
 	const diagram = useAppSelector((state) =>
 		selectDiagramById(state, id as string)
@@ -67,13 +81,60 @@ export default function Canvas(): JSX.Element {
 	const dispatch = useAppDispatch();
 
 	const handleCustomEvent = (event: CustomEvent) => {
-		const { pin, index } = event.detail;
+		const { pin } = event.detail;
 		const { elementName, pinName, x, y } = pin;
-		const connection = partTagsToConnectionStrings[elementName];
-		if (connection) {
-			console.log("Connection", connection, pinName, x, y, index);
-		}
+		const type = partTagsToConnectionStrings[pinName];
+
+		// 2 pins need to be clicked to create a connection
+		// if the first pin is clicked, store the element and pin name --> MCUF1, MCUA11
+		// if the second pin is clicked, create a connection between the two pins
+		// if the first pin is clicked again, reset the connection
+		// console.log(connection);
+
+		setConnection((prevConnection) => {
+			// If both pins are empty, set the first pin
+			if (prevConnection[0] === "" && prevConnection[1] === "") {
+				return { ...prevConnection, 0: (type + elementName) as Pin };
+			}
+
+			// If the first pin is clicked again, reset the connection
+			if (prevConnection[0] === type + elementName) {
+				return { ...prevConnection, 0: "" };
+			}
+
+			// If the first pin is not empty and the second pin is empty, set the second pin
+			if (prevConnection[0] !== "" && prevConnection[1] === "") {
+				return { ...prevConnection, 1: (type + elementName) as Pin };
+			}
+
+			// Return previous state if none of the above conditions are met
+			return prevConnection;
+		});
 	};
+
+	useEffect(() => {
+		if (connection[0] !== "" && connection[1] !== "") {
+			console.log("Creating connection", connection);
+			try {
+				createConnection({
+					_id: id as string,
+					connection: [connection[0], connection[1]],
+				}).unwrap();
+				toast({
+					title: "Connection created",
+					description: `Connection between ${connection[0]} and ${connection[1]} created`,
+				});
+				setConnection({ 0: "", 1: "" });
+			} catch (error) {
+				toast({
+					variant: "destructive",
+					title: "Failed to create connection",
+					description: error as string,
+				});
+			}
+		}
+		console.log("inside useEffect", connection);
+	}, [connection]);
 
 	useEffect(() => {
 		document.addEventListener(

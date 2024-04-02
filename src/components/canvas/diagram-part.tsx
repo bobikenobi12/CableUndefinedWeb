@@ -38,6 +38,14 @@ export default function DiagramPart({
 	const handleStop = (e: DraggableEvent, ui: DraggableData) => {
 		e.preventDefault();
 		if (part) {
+			// if the part is locked, return the part to its original position
+			if (part.locked) {
+				setTempPosition({ x: part.x, y: part.y });
+				return;
+			}
+			if (ui.x === part.x && ui.y === part.y) {
+				return;
+			}
 			try {
 				updatePart({
 					_id: diagramId as string,
@@ -95,15 +103,24 @@ export default function DiagramPart({
 		<Draggable
 			nodeRef={nodeRef}
 			position={{
-				x: part ? part.x : 0,
-				y: part ? part.y : 0,
+				x: isLoadingUpdatePartMutation
+					? tempPosition.x
+					: part
+					? part.x
+					: 0,
+				y: isLoadingUpdatePartMutation
+					? tempPosition.y
+					: part
+					? part.y
+					: 0,
 			}}
 			onDrag={handleDrag}
 			onStop={handleStop}
 			// bounds="parent"
 			scale={1.3}
 			positionOffset={{ x: "100%", y: "10%" }}
-			axis={part?.locked ? "none" : "both"}
+			// axis={part?.locked ? "none" : "both"}
+			// axis="none"
 			// offsetParent={document.getElementById("canvas") as HTMLElement}
 		>
 			<div

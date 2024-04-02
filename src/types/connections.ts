@@ -12,7 +12,7 @@ type MAINRow = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 // type PowerPin = `MAIN${PowerType}${PowerColumn}${PowerRow}`;
 type MCUPin = `MCU${OtherColumn}${MCURow}`;
 type MAINPin = `MAIN${OtherColumn}${MAINRow}`;
-type Pin = MCUPin | MAINPin;
+export type Pin = MCUPin | MAINPin;
 
 const PinSchema = z
 	.string()

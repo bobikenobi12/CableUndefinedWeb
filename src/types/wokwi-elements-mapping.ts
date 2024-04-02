@@ -58,7 +58,7 @@ const partMappings: WokwiElementsMapping = {
 	"Tilt Switch": new wokwiElements.TiltSwitchElement(),
 };
 
-const partTagsToConnectionStrings: Record<string, string> = {
+const partTagsToConnectionStrings: { [key: string]: string } = {
 	"wokwi-main-breadboard": "MAIN",
 	"wokwi-mcu-breadboard": "MCU",
 };

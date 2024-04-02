@@ -139,8 +139,6 @@ export function LitElementWrapper({ element }: { element: Part }) {
 	useEffect(() => {
 		if (containerRef.current) {
 			const el = partMappings[element.name];
-			console.log(el);
-			console.log(element.name);
 			if (el) {
 				const showPins = new wokwiElements.ShowPinsElement();
 				switch (element.name) {

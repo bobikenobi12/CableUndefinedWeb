@@ -16,7 +16,7 @@ export const connectionsApiSlice = apiSlice.injectEndpoints({
 			queryFn: ({ _id, connection }) => {
 				const socket = getSocket(SocketNamespace.DIAGRAMS);
 
-				socket.emit(SocketEvent.ADD_PART, {
+				socket.emit(SocketEvent.CREATE_CONNECTION, {
 					token: localStorage.getItem("_token"),
 					diagram: {
 						_id,
@@ -25,7 +25,7 @@ export const connectionsApiSlice = apiSlice.injectEndpoints({
 				});
 
 				return new Promise((resolve, reject) => {
-					socket.on(SocketEvent.ADD_PART, (data) => {
+					socket.on(SocketEvent.CREATE_CONNECTION, (data) => {
 						if ("error" in data) {
 							reject(data.error);
 						} else {
@@ -63,3 +63,6 @@ export const connectionsApiSlice = apiSlice.injectEndpoints({
 	}),
 	overrideExisting: false,
 });
+
+export const { useCreateConnectionMutation, useDeleteConnectionMutation } =
+	connectionsApiSlice;
