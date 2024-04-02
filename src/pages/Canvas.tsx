@@ -168,12 +168,7 @@ export default function Canvas(): JSX.Element {
 							<Dialog>
 								<ContextMenu>
 									<ContextMenuTrigger>
-										<DiagramPart part={part}>
-											<div className="flex items-center space-x-2">
-												{part.name}
-											</div>
-											<LitElementWrapper element={part} />
-										</DiagramPart>
+										<DiagramPart part={part} />
 									</ContextMenuTrigger>
 									<ContextMenuContent className="w-48">
 										<ContextMenuItem>

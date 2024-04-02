@@ -43,12 +43,14 @@ import { useAppDispatch } from "@/redux/hooks";
 
 import { useRemovePartMutation } from "@/redux/features/parts/parts-api-slice";
 
-import "@b.borisov/cu-elements";
+import * as wokwiElements from "@b.borisov/cu-elements";
 
 import { useParams } from "react-router-dom";
 
 import type { Part } from "@/types/parts";
 import { partMappings } from "@/types/wokwi-elements-mapping";
+
+import { PinType } from "@/types/parts";
 
 const schema = z.object({
 	name: z.string(),
@@ -136,13 +138,38 @@ export function LitElementWrapper({ element }: { element: Part }) {
 
 	useEffect(() => {
 		if (containerRef.current) {
-			const el = partMappings[element.name]; // HTMLElement
+			const el = partMappings[element.name];
+			console.log(el);
+			console.log(element.name);
 			if (el) {
-				const showPins = partMappings["Show Pins"];
+				const showPins = new wokwiElements.ShowPinsElement();
+				switch (element.name) {
+					case "MCU Breadboard" || "Main Breadboard":
+						showPins.pinRadius = 5;
+						showPins.pinHeight = 10;
+						showPins.pinHeight = 10;
+						showPins.pinType = PinType.Circle;
+						break;
+					case "Arduino Nano" || "Arduino Uno" || "Arduino Mega":
+						showPins.pinRadius = 3;
+						showPins.pinType = PinType.Rect;
+						break;
+					default:
+						showPins.pinRadius = 3;
+						showPins.pinType = PinType.Circle;
+						break;
+				}
+				containerRef.current.innerHTML = "";
 				containerRef.current.appendChild(showPins);
-				containerRef.current.appendChild(el);
+				showPins.appendChild(el);
 			}
 		}
+
+		return () => {
+			if (containerRef.current) {
+				containerRef.current.innerHTML = "";
+			}
+		};
 	}, [element]);
 
 	return <div ref={containerRef}></div>;
@@ -179,12 +206,7 @@ export default function ElementContextMenu({
 		<Dialog>
 			<ContextMenu>
 				<ContextMenuTrigger>
-					<DiagramPart part={part}>
-						<div className="flex items-center space-x-2">
-							{part.name}
-						</div>
-						<LitElementWrapper element={part} />
-					</DiagramPart>
+					<DiagramPart part={part} />
 				</ContextMenuTrigger>
 				<ContextMenuContent className="w-48">
 					<ContextMenuItem>

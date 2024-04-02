@@ -8,6 +8,9 @@ import type { Part } from "@/types/parts";
 
 import { useParams } from "react-router-dom";
 import { toast } from "../ui/use-toast";
+
+import { LitElementWrapper } from "./element-context.menu";
+
 interface PartProps {
 	part: Part;
 	children?: React.ReactNode;
@@ -47,11 +50,17 @@ export default function DiagramPart({
 					.unwrap()
 					.then((res) => {
 						// set x and y because currently the part x and y get updated, but the element returns back to its initial spot and a little bit after returns to the new spot
-						const { x, y } = res.diagram.parts.find(
+						const foundPart = res.diagram.parts.find(
 							(p) => p.id === part.id
-						) as Part;
+						);
 
-						setTempPosition({ x, y });
+						if (foundPart) {
+							setTempPosition({ x: foundPart.x, y: foundPart.y });
+						}
+						toast({
+							title: "Part position updated.",
+							description: "Part position updated successfully.",
+						});
 					});
 			} catch (error) {
 				toast({
@@ -68,12 +77,20 @@ export default function DiagramPart({
 	// 	onRotate(newRotation);
 	// };
 
-	useEffect(() => {
-		if (part) {
-			setTempPosition({ x: part.x, y: part.y });
-		}
-	}, [part]);
+	// useEffect(() => {
+	// 	if (part) {
+	// 		setTempPosition({ x: part.x, y: part.y });
+	// 	}
+	// }, [part]);
 
+	useEffect(() => {
+		if (isLoadingUpdatePartMutation) {
+			toast({
+				title: "Updating part",
+				description: "Updating part position...",
+			});
+		}
+	}, [isLoadingUpdatePartMutation]);
 	return (
 		<Draggable
 			nodeRef={nodeRef}
@@ -98,7 +115,8 @@ export default function DiagramPart({
 				}}
 				className="flex flex-col items-center space-y-2 p-2 rounded-md w-1/6"
 			>
-				{children}
+				<div className="flex items-center space-x-2">{part.name}</div>
+				<LitElementWrapper element={part} />
 			</div>
 		</Draggable>
 	);
