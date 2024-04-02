@@ -12,6 +12,8 @@ enum SocketEvent {
 	ADD_PART = "diagrams:parts:add",
 	UPDATE_PART = "diagrams:parts:update",
 	REMOVE_PART = "diagrams:parts:remove",
+	CREATE_CONNECTION = "diagrams:connections:create",
+	DELETE_CONNECTION = "diagrams:connections:delete",
 }
 
 enum SocketNamespace {

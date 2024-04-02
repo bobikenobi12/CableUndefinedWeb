@@ -46,6 +46,9 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 
+import { partTagsToConnectionStrings } from "@/types/wokwi-elements-mapping";
+import { Connection } from "@/types/connections";
+
 export default function Canvas(): JSX.Element {
 	const { id } = useParams();
 
@@ -64,8 +67,12 @@ export default function Canvas(): JSX.Element {
 	const dispatch = useAppDispatch();
 
 	const handleCustomEvent = (event: CustomEvent) => {
-		console.log("Custom event caught!", event.detail);
-		// Do something with the event data
+		const { pin, index } = event.detail;
+		const { elementName, pinName, x, y } = pin;
+		const connection = partTagsToConnectionStrings[elementName];
+		if (connection) {
+			console.log("Connection", connection, pinName, x, y, index);
+		}
 	};
 
 	useEffect(() => {
