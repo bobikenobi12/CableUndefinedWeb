@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 import { diagramsApiSlice } from "./diagrams-api-slice";
 import { partsApiSlice } from "@/redux/features/parts/parts-api-slice";
+import { connectionsApiSlice } from "../connections/connections-api-slice";
 
 import type { RootState } from "@/redux/store";
 

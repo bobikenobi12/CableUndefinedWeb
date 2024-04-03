@@ -38,6 +38,23 @@ import { Footer } from "./Footer";
 import { UserCombobox } from "../user-combobox";
 import { DiagramsCombobox } from "../diagrams-combobox";
 
+export function CableUndefined() {
+	return (
+		<h1 className="relative flex flex-row items-baseline text-2xl font-bold">
+			<span className="sr-only">CableUndefined</span>
+			<span className="tracking-tight hover:cursor-pointer text-primary">
+				Cable
+				<span className="text-muted-foreground hover:text-primary">
+					Undefined
+				</span>
+			</span>
+			<sup className="absolute left-[calc(100%+.1rem)] top-0 text-xs font-bold text-black hidden">
+				[BETA]
+			</sup>
+		</h1>
+	);
+}
+
 export function Applayout() {
 	const user = useAppSelector(selectUser);
 
@@ -73,20 +90,7 @@ export function Applayout() {
 						<BreadcrumbList className="flex items-center space-x-2">
 							<BreadcrumbItem>
 								<BreadcrumbLink href="/dashboard">
-									<h1 className="relative flex flex-row items-baseline text-2xl font-bold">
-										<span className="sr-only">
-											CableUndefined
-										</span>
-										<span className="tracking-tight hover:cursor-pointer text-primary">
-											Cable
-											<span className="text-muted-foreground hover:text-primary">
-												Undefined
-											</span>
-										</span>
-										<sup className="absolute left-[calc(100%+.1rem)] top-0 text-xs font-bold text-black hidden">
-											[BETA]
-										</sup>
-									</h1>
+									<CableUndefined />
 								</BreadcrumbLink>
 							</BreadcrumbItem>
 							<BreadcrumbSeparator>

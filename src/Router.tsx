@@ -13,9 +13,14 @@ import LoginPage from "./pages/Login";
 import RegisterPage from "./pages/Register";
 import CreateDiagram from "./pages/CreateDiagram";
 import Canvas from "./pages/Canvas";
+import Home from "./pages/Home";
 
 export const unauthenticatedRouter = createBrowserRouter(
 	[
+		{
+			path: "",
+			element: <Home />,
+		},
 		{
 			path: "login",
 			element: <LoginPage />,
