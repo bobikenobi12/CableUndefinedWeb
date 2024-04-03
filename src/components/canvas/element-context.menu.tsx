@@ -35,15 +35,14 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { DialogFooter } from "@/components/ui/dialog";
-import { editElementName } from "@/redux/features/diagrams/wokwi-elements-slice";
 
 import DiagramPart from "@/components/canvas/diagram-part";
-
-import { useAppDispatch } from "@/redux/hooks";
 
 import { useRemovePartMutation } from "@/redux/features/parts/parts-api-slice";
 
 import * as wokwiElements from "@b.borisov/cu-elements";
+
+import { useUpdatePartMutation } from "@/redux/features/parts/parts-api-slice";
 
 import { useParams } from "react-router-dom";
 
@@ -51,6 +50,7 @@ import type { Part } from "@/types/parts";
 import { partMappings } from "@/types/wokwi-elements-mapping";
 
 import { PinType } from "@/types/parts";
+import { Toast } from "../ui/toast";
 
 const schema = z.object({
 	name: z.string(),
@@ -59,13 +59,18 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export const RenameElementForm = ({
-	id,
+	part,
 	initialName,
 }: {
-	id: string;
+	part: Part;
 	initialName: string;
 }) => {
-	const dispatch = useAppDispatch();
+	const { id } = useParams<{ id: string }>();
+
+	const [updatePart, { isLoading: isLoadingUpdatePartMutation }] =
+		useUpdatePartMutation();
+
+	const { toast, dismiss } = useToast();
 
 	const form = useForm<FormValues>({
 		mode: "onSubmit",
@@ -76,12 +81,25 @@ export const RenameElementForm = ({
 	});
 
 	const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-		dispatch(
-			editElementName({
-				id: id,
-				name: data.name,
-			})
-		);
+		try {
+			updatePart({
+				_id: id as string,
+				part: {
+					...part,
+					name: data.name,
+				},
+			});
+			toast({
+				title: "Element renamed",
+				description: `Element renamed to ${data.name}`,
+			});
+		} catch (error) {
+			toast({
+				variant: "destructive",
+				title: "Failed to switch element",
+				description: error as string,
+			});
+		}
 	};
 
 	return (
@@ -246,7 +264,7 @@ export default function ElementContextMenu({
 						Enter a new name for the element
 					</DialogDescription>
 				</DialogHeader>
-				<RenameElementForm id={part.id} initialName={part.name} />
+				<RenameElementForm part={part} initialName={part.name} />
 			</DialogContent>
 		</Dialog>
 	);

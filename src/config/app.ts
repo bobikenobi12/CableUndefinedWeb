@@ -14,7 +14,7 @@ export const appConfig: AppConfig = {
 	name: "CableUndefined",
 	github: {
 		title: "CableUndefined",
-		url: "https://github.com/CableUndefined/",
+		url: "https://github.com/Pupe6/",
 	},
 	author: {
 		name: "bobikenobi12",

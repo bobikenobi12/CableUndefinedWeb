@@ -27,13 +27,12 @@ import {
 } from "@/redux/features/auth/auth-handler-slice";
 
 import { useLogoutMutation } from "@/redux/features/auth/auth-api-slice";
+import { logout } from "@/redux/features/auth/auth-handler-slice";
 
-import { useMatch, useLocation } from "react-router-dom";
+import { useMatch, useLocation, useNavigate } from "react-router-dom";
 
 import { Profile } from "@/components/profile";
-
 import { Outlet } from "react-router-dom";
-import { Footer } from "./Footer";
 
 import { UserCombobox } from "../user-combobox";
 import { DiagramsCombobox } from "../diagrams-combobox";
@@ -59,21 +58,27 @@ export function Applayout() {
 	const user = useAppSelector(selectUser);
 
 	const dispatch = useAppDispatch();
-	const [logout, { isLoading, isError }] = useLogoutMutation();
+	const [logoutMutation, { isLoading, isError }] = useLogoutMutation();
 
 	const location = useLocation();
 	const match = useMatch("/dashboard/:id");
 
 	const { toast } = useToast();
 
+	const navigate = useNavigate();
+
 	const handleLogout = async () => {
 		try {
-			await logout();
+			logoutMutation().unwrap();
+			dispatch(logout());
+			dispatch(setOpenProfile(false));
 			toast({
 				title: "Success",
 				description: "Logged out successfully",
 			});
+			// navigate("/login");
 		} catch (error) {
+			console.error(error);
 			toast({
 				title: "Error",
 				description: "An error occurred while logging out",

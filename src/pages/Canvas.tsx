@@ -288,7 +288,7 @@ export default function Canvas(): JSX.Element {
 										</DialogDescription>
 									</DialogHeader>
 									<RenameElementForm
-										id={part.id}
+										part={part}
 										initialName={part.name}
 									/>
 								</DialogContent>
