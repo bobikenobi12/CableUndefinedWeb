@@ -35,20 +35,22 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { DialogFooter } from "@/components/ui/dialog";
-import { editElementName } from "@/redux/features/diagrams/wokwi-elements-slice";
 
 import DiagramPart from "@/components/canvas/diagram-part";
 
-import { useAppDispatch } from "@/redux/hooks";
-
 import { useRemovePartMutation } from "@/redux/features/parts/parts-api-slice";
 
-import "@b.borisov/cu-elements";
+import * as wokwiElements from "@b.borisov/cu-elements";
+
+import { useUpdatePartMutation } from "@/redux/features/parts/parts-api-slice";
 
 import { useParams } from "react-router-dom";
 
 import type { Part } from "@/types/parts";
 import { partMappings } from "@/types/wokwi-elements-mapping";
+
+import { PinType } from "@/types/parts";
+import { Toast } from "../ui/toast";
 
 const schema = z.object({
 	name: z.string(),
@@ -57,13 +59,18 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export const RenameElementForm = ({
-	id,
+	part,
 	initialName,
 }: {
-	id: string;
+	part: Part;
 	initialName: string;
 }) => {
-	const dispatch = useAppDispatch();
+	const { id } = useParams<{ id: string }>();
+
+	const [updatePart, { isLoading: isLoadingUpdatePartMutation }] =
+		useUpdatePartMutation();
+
+	const { toast, dismiss } = useToast();
 
 	const form = useForm<FormValues>({
 		mode: "onSubmit",
@@ -74,12 +81,25 @@ export const RenameElementForm = ({
 	});
 
 	const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-		dispatch(
-			editElementName({
-				id: id,
-				name: data.name,
-			})
-		);
+		try {
+			updatePart({
+				_id: id as string,
+				part: {
+					...part,
+					name: data.name,
+				},
+			});
+			toast({
+				title: "Element renamed",
+				description: `Element renamed to ${data.name}`,
+			});
+		} catch (error) {
+			toast({
+				variant: "destructive",
+				title: "Failed to switch element",
+				description: error as string,
+			});
+		}
 	};
 
 	return (
@@ -136,13 +156,36 @@ export function LitElementWrapper({ element }: { element: Part }) {
 
 	useEffect(() => {
 		if (containerRef.current) {
-			const el = partMappings[element.name]; // HTMLElement
+			const el = partMappings[element.name];
 			if (el) {
-				const showPins = partMappings["Show Pins"];
+				const showPins = new wokwiElements.ShowPinsElement();
+				switch (element.name) {
+					case "MCU Breadboard" || "Main Breadboard":
+						showPins.pinRadius = 5;
+						showPins.pinHeight = 10;
+						showPins.pinHeight = 10;
+						showPins.pinType = PinType.Circle;
+						break;
+					case "Arduino Nano" || "Arduino Uno" || "Arduino Mega":
+						showPins.pinRadius = 3;
+						showPins.pinType = PinType.Rect;
+						break;
+					default:
+						showPins.pinRadius = 3;
+						showPins.pinType = PinType.Circle;
+						break;
+				}
+				containerRef.current.innerHTML = "";
 				containerRef.current.appendChild(showPins);
-				containerRef.current.appendChild(el);
+				showPins.appendChild(el);
 			}
 		}
+
+		return () => {
+			if (containerRef.current) {
+				containerRef.current.innerHTML = "";
+			}
+		};
 	}, [element]);
 
 	return <div ref={containerRef}></div>;
@@ -179,12 +222,7 @@ export default function ElementContextMenu({
 		<Dialog>
 			<ContextMenu>
 				<ContextMenuTrigger>
-					<DiagramPart part={part}>
-						<div className="flex items-center space-x-2">
-							{part.name}
-						</div>
-						<LitElementWrapper element={part} />
-					</DiagramPart>
+					<DiagramPart part={part} />
 				</ContextMenuTrigger>
 				<ContextMenuContent className="w-48">
 					<ContextMenuItem>
@@ -226,7 +264,7 @@ export default function ElementContextMenu({
 						Enter a new name for the element
 					</DialogDescription>
 				</DialogHeader>
-				<RenameElementForm id={part.id} initialName={part.name} />
+				<RenameElementForm part={part} initialName={part.name} />
 			</DialogContent>
 		</Dialog>
 	);

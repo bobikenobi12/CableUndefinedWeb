@@ -32,6 +32,11 @@ export const authHandlerSlice = createSlice({
 		setOpenUpdateProfile: (state, action) => {
 			state.openUpdateProfile = action.payload;
 		},
+		logout: (state) => {
+			state = authState;
+			localStorage.removeItem("_token");
+			localStorage.removeItem("user");
+		},
 	},
 	extraReducers: (builder) => {
 		builder.addMatcher(
@@ -53,8 +58,12 @@ export const authHandlerSlice = createSlice({
 	},
 });
 
-export const { setOpenProfile, setOpenDeleteProfile, setOpenUpdateProfile } =
-	authHandlerSlice.actions;
+export const {
+	setOpenProfile,
+	setOpenDeleteProfile,
+	setOpenUpdateProfile,
+	logout,
+} = authHandlerSlice.actions;
 
 export const selectIsAuthenticated = (state: { auth: AuthState }) =>
 	state.auth.user._token !== "";

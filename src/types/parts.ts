@@ -10,4 +10,10 @@ interface Part extends AddPart {
 	id: string;
 }
 
+enum PinType {
+	Circle = "circle",
+	Rect = "rect",
+}
+
 export type { Part, AddPart };
+export { PinType };

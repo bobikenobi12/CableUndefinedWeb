@@ -1,4 +1,6 @@
 import type { Part } from "./parts";
+import type { Connection } from "./connections";
+
 interface Diagram {
 	_id: string;
 	createdAt: string;
@@ -7,6 +9,7 @@ interface Diagram {
 	name: string;
 	microcontroller: Microcontroller;
 	parts: Part[];
+	connection: Connection[];
 }
 
 enum Microcontroller {

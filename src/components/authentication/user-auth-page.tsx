@@ -12,7 +12,7 @@ interface Props {
 export function UserAuthPage({ register }: Props) {
 	return (
 		<>
-			<div className="container relative h-[800px] flex flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
+			<div className="container relative h-screen flex flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
 				<Link
 					to={register ? "/login" : "/register"}
 					className={cn(

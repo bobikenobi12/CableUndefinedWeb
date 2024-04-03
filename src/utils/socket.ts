@@ -1,6 +1,8 @@
 import { Socket, io } from "socket.io-client";
 import { SocketNamespace } from "@/types/socket";
 
+import { ServerErrors } from "@/types/errors";
+
 let socket: Socket;
 
 function getSocket(namespace: SocketNamespace = SocketNamespace.INDEX) {
@@ -10,8 +12,18 @@ function getSocket(namespace: SocketNamespace = SocketNamespace.INDEX) {
 	socket.on("connect", () => {
 		console.log("socket connected");
 	});
-	socket.on("error", (error) => {
-		console.log("socket error", error);
+	socket.on("error", (error: ServerErrors) => {
+		switch (error) {
+			case ServerErrors.INVALID_TOKEN:
+				console.error("Invalid token");
+				break;
+			case ServerErrors.UNAUTHORIZED:
+				console.error("Unauthorized");
+				break;
+			default:
+				console.error("Unknown error", error);
+				break;
+		}
 	});
 	return socket;
 }
