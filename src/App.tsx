@@ -1,5 +1,6 @@
 import { RouterProvider } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { authenticatedRouter, unauthenticatedRouter } from "./Router";
 
 import { useAppSelector } from "@/redux/hooks";
@@ -9,13 +10,15 @@ export default function App() {
 	const isAuthenticated = useAppSelector(selectIsAuthenticated);
 	return (
 		<ThemeProvider>
-			<RouterProvider
-				router={
-					isAuthenticated
-						? authenticatedRouter
-						: unauthenticatedRouter
-				}
-			/>
+			<TooltipProvider>
+				<RouterProvider
+					router={
+						isAuthenticated
+							? authenticatedRouter
+							: unauthenticatedRouter
+					}
+				/>
+			</TooltipProvider>
 		</ThemeProvider>
 	);
 }

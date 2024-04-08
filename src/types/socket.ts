@@ -3,6 +3,7 @@ enum SocketEvent {
 	LOGOUT = "auth:logout",
 	REGISTER = "auth:register",
 	PREDICTION = "prediction",
+	GENERATE_CODE = "generateCode",
 	USER_UPDATE = "users:update",
 	USER_DELETE = "users:delete",
 	GET_DIAGRAMS = "diagrams:get",

@@ -55,8 +55,15 @@ export const diagramsApiSlice = apiSlice.injectEndpoints({
 			},
 			invalidatesTags: [{ type: "Diagrams", id: "LIST" }],
 		}),
-		updateDiagram: build.mutation<Diagram, { id: string; name: string }>({
-			queryFn: (body: { id: string; name: string }) => {
+		updateDiagram: build.mutation<
+			Diagram,
+			{ id: string; name: string; microcontroller: Microcontroller }
+		>({
+			queryFn: (body: {
+				id: string;
+				name: string;
+				microcontroller: Microcontroller;
+			}) => {
 				const socket = getSocket(SocketNamespace.DIAGRAMS);
 
 				socket.emit(SocketEvent.UPDATE_DIAGRAM, {
@@ -66,6 +73,7 @@ export const diagramsApiSlice = apiSlice.injectEndpoints({
 					},
 					update: {
 						name: body.name,
+						microcontroller: body.microcontroller,
 					},
 				});
 
