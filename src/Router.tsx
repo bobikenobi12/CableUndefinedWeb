@@ -35,7 +35,7 @@ export const unauthenticatedRouter = createBrowserRouter(
 		},
 	],
 	{
-		basename: global.basename,
+		// basename: global.basename,
 	}
 );
 
@@ -70,6 +70,6 @@ export const authenticatedRouter = createBrowserRouter(
 		},
 	],
 	{
-		basename: global.basename,
+		// basename: global.basename,
 	}
 );
