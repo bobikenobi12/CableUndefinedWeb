@@ -16,6 +16,7 @@ export enum Tab {
 	PREDICTION = "prediction",
 	CODE = "code",
 	PARTS = "parts",
+	SETTINGS = "settings",
 }
 
 interface IndexState {

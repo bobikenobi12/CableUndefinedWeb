@@ -32,7 +32,7 @@ import {
 
 import { useToast } from "@/components/ui/use-toast";
 
-import { Home, Combine, CodeXml, Component } from "lucide-react";
+import { Home, Combine, CodeXml, Component, Settings, Mic } from "lucide-react";
 
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
@@ -40,6 +40,10 @@ import {
 	getShowGrid,
 } from "@/redux/features/diagrams/wokwi-elements-slice";
 
+import {
+	useDeleteDiagramMutation,
+	useUpdateDiagramMutation,
+} from "@/redux/features/diagrams/diagrams-api-slice";
 import { selectDiagramById } from "@/redux/features/diagrams/diagrams-slice";
 
 import {
@@ -72,6 +76,46 @@ import { Pin } from "@/types/connections";
 import { Button } from "@/components/ui/button";
 import { Microcontroller } from "@/types/diagrams";
 import { CopyBlock } from "react-code-blocks";
+import {
+	PageHeader,
+	PageHeaderDescription,
+	PageHeaderHeading,
+} from "@/components/page-header";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+
+import { z } from "zod";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectLabel,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+
+const schema = z.object({
+	name: z.string().nonempty(),
+	microcontroller: z.enum([
+		Microcontroller.ATTiny85,
+		Microcontroller.ArduinoNano,
+		Microcontroller.RasberryPiPico,
+		Microcontroller.ESP32,
+	]),
+});
+
+type UpdateDiagramFormValues = z.infer<typeof schema>;
 
 export default function Canvas(): JSX.Element {
 	const { id } = useParams<{ id: string }>();
@@ -83,6 +127,11 @@ export default function Canvas(): JSX.Element {
 		0: "",
 		1: "",
 	});
+
+	const [updateDiagram, { isLoading: isLoadingUpdateDiagram }] =
+		useUpdateDiagramMutation();
+	const [deleteDiagram, { isLoading: isLoadingDeleteDiagram }] =
+		useDeleteDiagramMutation();
 
 	const [removePart, { isLoading: isLoadingRemovePartMutation }] =
 		useRemovePartMutation();
@@ -143,30 +192,6 @@ export default function Canvas(): JSX.Element {
 	};
 
 	useEffect(() => {
-		if (connection[0] !== "" && connection[1] !== "") {
-			console.log("Creating connection", connection);
-			try {
-				createConnection({
-					_id: id as string,
-					connection: [connection[0], connection[1]],
-				}).unwrap();
-				toast({
-					title: "Connection created",
-					description: `Connection between ${connection[0]} and ${connection[1]} created`,
-				});
-				setConnection({ 0: "", 1: "" });
-			} catch (error) {
-				toast({
-					variant: "destructive",
-					title: "Failed to create connection",
-					description: error as string,
-				});
-			}
-		}
-		console.log("inside useEffect", connection);
-	}, [connection]);
-
-	useEffect(() => {
 		document.addEventListener(
 			"pin-click",
 			handleCustomEvent as EventListener
@@ -215,6 +240,35 @@ export default function Canvas(): JSX.Element {
 			});
 		}
 	}
+
+	const form = useForm<UpdateDiagramFormValues>({
+		resolver: zodResolver(schema),
+		defaultValues: {
+			name: diagram?.name ?? "",
+			microcontroller:
+				diagram?.microcontroller ?? Microcontroller.ATTiny85,
+		},
+	});
+
+	const onSubmit: SubmitHandler<UpdateDiagramFormValues> = (data) => {
+		try {
+			updateDiagram({
+				id: id as string,
+				name: data.name,
+				microcontroller: data.microcontroller,
+			}).unwrap();
+			toast({
+				title: "Diagram updated",
+				description: `Updated diagram with name ${data.name} and microcontroller ${data.microcontroller}`,
+			});
+		} catch (error) {
+			toast({
+				variant: "destructive",
+				title: "Failed to update diagram",
+				description: error as string,
+			});
+		}
+	};
 
 	return (
 		<div className="flex grow py-6">
@@ -278,240 +332,467 @@ export default function Canvas(): JSX.Element {
 						<TooltipContent side="right">Prediction</TooltipContent>
 					</Tooltip>
 				</nav>
+				<nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
+					<Tooltip>
+						<TooltipTrigger
+							asChild
+							onClick={() => {
+								dispatch(setTab(Tab.SETTINGS));
+							}}
+						>
+							<div
+								className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+									tab === Tab.SETTINGS
+										? "bg-accent text-accent-foreground"
+										: "text-muted-foreground"
+								}  transition-colors hover:text-foreground md:h-8 md:w-8`}
+							>
+								<Settings className="h-5 w-5" />
+								<span className="sr-only">Settings</span>
+							</div>
+						</TooltipTrigger>
+						<TooltipContent side="right">Settings</TooltipContent>
+					</Tooltip>
+				</nav>
 			</aside>
 			<div className="flex-1 relative lg:ml-14 h-full w-full">
-				<ResizablePanelGroup direction="horizontal" className="h-full">
-					<ResizablePanel
-						defaultSize={50}
-						onCompositionEnd={(e) => console.log(e)}
+				{tab === Tab.SETTINGS ? (
+					<div className="flex flex-col w-fit-content p-2 space-y-2 px-4">
+						<PageHeader className="flex w-full flex-col-reverse items-center justify-between gap-4 px-6 md:flex-row">
+							<PageHeaderHeading>Setting</PageHeaderHeading>
+							<PageHeaderDescription>
+								Configure the settings for this diagram
+							</PageHeaderDescription>
+						</PageHeader>
+						<div className="flex w-full flex-col items-center justify-center">
+							<Card className="mt-4 w-full rounded-lg border p-4 sm:p-6">
+								<CardHeader>
+									<div className="text-lg font-bold">
+										General
+									</div>
+									<div className="text-sm text-muted-foreground">
+										Adjust your diagram's name and
+										microcontroller
+									</div>
+								</CardHeader>
+								<CardContent>
+									<div className="flex flex-col">
+										<Form {...form}>
+											<form
+												onSubmit={form.handleSubmit(
+													onSubmit
+												)}
+											>
+												<div className="grid gap-2">
+													<div className="grid gap-3">
+														<FormField
+															control={
+																form.control
+															}
+															name="name"
+															render={({
+																field,
+																formState,
+															}) => (
+																<FormItem>
+																	<FormLabel>
+																		Diagram
+																		Name
+																	</FormLabel>
+																	<FormControl>
+																		<Input
+																			id="name"
+																			placeholder="Diagram Name"
+																			type="text"
+																			autoCapitalize="none"
+																			autoCorrect="off"
+																			{...field}
+																		/>
+																	</FormControl>
+																	<FormMessage>
+																		{
+																			formState
+																				.errors
+																				.name
+																				?.message
+																		}
+																	</FormMessage>
+																</FormItem>
+															)}
+														/>
+														<FormField
+															control={
+																form.control
+															}
+															name="microcontroller"
+															render={({
+																field,
+																formState,
+															}) => (
+																<FormItem>
+																	<FormLabel>
+																		Diagram
+																		Microcontroller
+																	</FormLabel>
+																	<FormControl>
+																		<Select
+																			{...field}
+																		>
+																			<SelectTrigger>
+																				<SelectValue placeholder="Select a microcontroller" />
+																			</SelectTrigger>
+																			<SelectContent>
+																				<SelectGroup>
+																					<SelectLabel>
+																						Microcontrollers
+																					</SelectLabel>
+																					<SelectItem
+																						value={
+																							Microcontroller.ATTiny85
+																						}
+																					>
+																						ATTiny85
+																					</SelectItem>
+																					<SelectItem
+																						value={
+																							Microcontroller.ArduinoNano
+																						}
+																					>
+																						Arduino
+																						Nano
+																					</SelectItem>
+																					<SelectItem
+																						value={
+																							Microcontroller.RasberryPiPico
+																						}
+																					>
+																						Rasberry
+																						Pi
+																						Pico
+																					</SelectItem>
+																					<SelectItem
+																						value={
+																							Microcontroller.ESP32
+																						}
+																					>
+																						ESP32
+																					</SelectItem>
+																				</SelectGroup>
+																			</SelectContent>
+																		</Select>
+																	</FormControl>
+																	<FormMessage>
+																		{
+																			formState
+																				.errors
+																				.microcontroller
+																				?.message
+																		}
+																	</FormMessage>
+																</FormItem>
+															)}
+														/>
+													</div>
+													<div className="flex justify-end mt-4">
+														<Button
+															type="submit"
+															disabled={
+																isLoadingUpdateDiagram ||
+																(form.getValues()
+																	.name ===
+																	diagram?.name &&
+																	form.getValues()
+																		.microcontroller ===
+																		diagram?.microcontroller)
+															}
+														>
+															Save Changes
+														</Button>
+													</div>
+												</div>
+											</form>
+										</Form>
+									</div>
+								</CardContent>
+							</Card>
+							<Card className="mt-4 w-full rounded-lg border p-4 sm:p-6">
+								<CardHeader>
+									<div className="text-lg font-bold">
+										Danger Zone
+									</div>
+									<div className="text-sm text-muted-foreground">
+										The following actions are destructive
+										and cannot be reversed.
+									</div>
+								</CardHeader>
+								<CardContent>
+									<Button
+										variant="destructive"
+										onClick={() => {
+											try {
+												deleteDiagram(id as string);
+												toast({
+													title: "Diagram deleted",
+													description: `Deleted diagram with id ${id}`,
+												});
+											} catch (error) {
+												toast({
+													variant: "destructive",
+													title: "Failed to delete diagram",
+													description:
+														error as string,
+												});
+											}
+										}}
+									>
+										Delete Diagram
+									</Button>
+								</CardContent>
+							</Card>
+						</div>
+					</div>
+				) : (
+					<ResizablePanelGroup
+						direction="horizontal"
+						className="h-full"
 					>
-						{tab === Tab.PARTS ? (
-							<div className="flex flex-col w-fit-content p-2 space-y-2">
-								<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
-									Choose Elements:
-								</h1>
-								<ScrollArea
-									className="flex flex-col items-center overflow-y-auto whitespace-nowrap rounded-md border h-[80vh] dark:border-gray-800"
-									aria-orientation="vertical"
-								>
-									{Object.entries(partMappings).map(
-										([name], idx) => (
-											<div
-												key={idx}
-												className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 cursor-pointer select-none dark:hover:bg-gray-800"
-												onClick={() => {
-													try {
-														addPart({
-															_id: id as string,
-															part: {
-																name,
-																angle: 0,
-																x: 0,
-																y: 0,
-																locked: false,
-															},
-														})
-															.unwrap()
-															.then(
-																(res: any) => {
+						<ResizablePanel
+							defaultSize={50}
+							onCompositionEnd={(e) => console.log(e)}
+						>
+							{tab === Tab.PARTS ? (
+								<div className="flex flex-col w-fit-content p-2 space-y-2">
+									<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
+										Choose Elements:
+									</h1>
+									<ScrollArea
+										className="flex flex-col items-center overflow-y-auto whitespace-nowrap rounded-md border h-[80vh] dark:border-gray-800"
+										aria-orientation="vertical"
+									>
+										{Object.entries(partMappings).map(
+											([name], idx) => (
+												<div
+													key={idx}
+													className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 cursor-pointer select-none dark:hover:bg-gray-800"
+													onClick={() => {
+														try {
+															addPart({
+																_id: id as string,
+																part: {
+																	name,
+																	angle: 0,
+																	x: 0,
+																	y: 0,
+																	locked: false,
+																},
+															})
+																.unwrap()
+																.then(
+																	(
+																		res: any
+																	) => {
+																		toast({
+																			title: "Element added",
+																			action: (
+																				<Button
+																					onClick={() =>
+																						removePartHandler(
+																							res
+																								.data
+																								.diagram
+																								.parts[
+																								-1
+																							]
+																								.id
+																						)
+																					}
+																				>
+																					Undo
+																				</Button>
+																			),
+																			description: `Added ${name} to canvas`,
+																			duration: 5000,
+																		});
+																	}
+																);
+														} catch (error) {
+															toast({
+																variant:
+																	"destructive",
+																title: "Failed to add element",
+																description:
+																	error as string,
+															});
+														}
+													}}
+												>
+													{name}
+												</div>
+											)
+										)}
+									</ScrollArea>
+								</div>
+							) : tab === Tab.CODE ? (
+								<div className="flex flex-col w-fit-content p-2 space-y-2">
+									<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
+										Generate Code:
+									</h1>
+									<div className="flex flex-col items-center space-y-2">
+										<Button
+											onClick={() => {
+												try {
+													generateCode({
+														microcontroller:
+															diagram?.microcontroller as Microcontroller,
+														module: "wifi",
+														prompt: "Connect to wifi",
+													});
+													toast({
+														title: "Code generated",
+														description:
+															"Code generated successfully",
+													});
+												} catch (error) {
+													toast({
+														variant: "destructive",
+														title: "Failed to generate code",
+														description:
+															error as string,
+													});
+												}
+											}}
+										>
+											Generate Code
+										</Button>
+									</div>
+									<CopyBlock
+										text={generatedCode?.code as string}
+										language="c"
+										showLineNumbers={true}
+									/>
+								</div>
+							) : tab === Tab.PREDICTION ? (
+								<div className="flex flex-col w-fit-content p-2 space-y-2">
+									<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
+										Prediction:
+									</h1>
+									<div className="flex flex-col items-center space-y-2">
+										<Button
+											onClick={() => {
+												try {
+													generatePrediction({
+														microcontroller:
+															diagram?.microcontroller as Microcontroller,
+														module: "wifi",
+													});
+												} catch (error) {
+													toast({
+														variant: "destructive",
+														title: "Failed to generate prediction",
+														description:
+															error as string,
+													});
+												}
+											}}
+										>
+											Generate Prediction
+										</Button>
+									</div>
+									<CopyBlock
+										text={
+											generatedPrediction?.prediction as string
+										}
+										language="plaintext"
+										showLineNumbers={true}
+									/>
+								</div>
+							) : null}
+						</ResizablePanel>
+						<ResizableHandle />
+						<ResizablePanel defaultSize={200}>
+							<div
+								className={`flex-1 relative ${
+									showGrid ? "scene-grid" : ""
+								}`}
+								// id="canvas"
+							>
+								{/* <ContextMenu>
+					<ContextMenuTrigger> */}
+								{diagram &&
+									diagram.parts.map((part, idx) => (
+										// <KeepScale>
+										<div key={idx}>
+											<Dialog>
+												<ContextMenu>
+													<ContextMenuTrigger>
+														<DiagramPart
+															part={part}
+														/>
+													</ContextMenuTrigger>
+													<ContextMenuContent className="w-48">
+														<ContextMenuItem>
+															<DialogTrigger
+																asChild
+															>
+																<ContextMenuItem>
+																	Rename
+																</ContextMenuItem>
+															</DialogTrigger>
+														</ContextMenuItem>
+														<ContextMenuItem>
+															Move up
+														</ContextMenuItem>
+														<ContextMenuItem>
+															Rotate
+														</ContextMenuItem>
+														<ContextMenuItem
+															onClick={() => {
+																try {
+																	removePart({
+																		_id: id as string,
+																		partId: part.id,
+																	});
 																	toast({
-																		title: "Element added",
-																		action: (
-																			<Button
-																				onClick={() =>
-																					removePartHandler(
-																						res
-																							.data
-																							.diagram
-																							.parts[
-																							-1
-																						]
-																							.id
-																					)
-																				}
-																			>
-																				Undo
-																			</Button>
-																		),
-																		description: `Added ${name} to canvas`,
-																		duration: 5000,
+																		title: "Element removed",
+																		description: `Removed ${part.name} from canvas`,
+																	});
+																} catch (error) {
+																	toast({
+																		variant:
+																			"destructive",
+																		title: "Failed to remove element",
+																		description:
+																			error as string,
 																	});
 																}
-															);
-													} catch (error) {
-														toast({
-															variant:
-																"destructive",
-															title: "Failed to add element",
-															description:
-																error as string,
-														});
-													}
-												}}
-											>
-												{name}
-											</div>
-										)
-									)}
-								</ScrollArea>
-							</div>
-						) : tab === Tab.CODE ? (
-							<div className="flex flex-col w-fit-content p-2 space-y-2">
-								<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
-									Generate Code:
-								</h1>
-								<div className="flex flex-col items-center space-y-2">
-									<Button
-										onClick={() => {
-											try {
-												generateCode({
-													microcontroller:
-														diagram?.microcontroller as Microcontroller,
-													module: "wifi",
-													prompt: "Connect to wifi",
-												});
-												toast({
-													title: "Code generated",
-													description:
-														"Code generated successfully",
-												});
-											} catch (error) {
-												toast({
-													variant: "destructive",
-													title: "Failed to generate code",
-													description:
-														error as string,
-												});
-											}
-										}}
-									>
-										Generate Code
-									</Button>
-								</div>
-								<CopyBlock
-									text={generatedCode?.code as string}
-									language="c"
-									showLineNumbers={true}
-								/>
-							</div>
-						) : tab === Tab.PREDICTION ? (
-							<div className="flex flex-col w-fit-content p-2 space-y-2">
-								<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
-									Prediction:
-								</h1>
-								<div className="flex flex-col items-center space-y-2">
-									<Button
-										onClick={() => {
-											try {
-												generatePrediction({
-													microcontroller:
-														diagram?.microcontroller as Microcontroller,
-													module: "wifi",
-												});
-											} catch (error) {
-												toast({
-													variant: "destructive",
-													title: "Failed to generate prediction",
-													description:
-														error as string,
-												});
-											}
-										}}
-									>
-										Generate Prediction
-									</Button>
-								</div>
-								<CopyBlock
-									text={
-										generatedPrediction?.prediction as string
-									}
-									language="plaintext"
-									showLineNumbers={true}
-								/>
-							</div>
-						) : null}
-					</ResizablePanel>
-					<ResizableHandle />
-					<ResizablePanel defaultSize={200}>
-						<div
-							className={`flex-1 relative ${
-								showGrid ? "scene-grid" : ""
-							}`}
-							// id="canvas"
-						>
-							{/* <ContextMenu>
-					<ContextMenuTrigger> */}
-							{diagram &&
-								diagram.parts.map((part, idx) => (
-									// <KeepScale>
-									<div key={idx}>
-										<Dialog>
-											<ContextMenu>
-												<ContextMenuTrigger>
-													<DiagramPart part={part} />
-												</ContextMenuTrigger>
-												<ContextMenuContent className="w-48">
-													<ContextMenuItem>
-														<DialogTrigger asChild>
-															<ContextMenuItem>
-																Rename
-															</ContextMenuItem>
-														</DialogTrigger>
-													</ContextMenuItem>
-													<ContextMenuItem>
-														Move up
-													</ContextMenuItem>
-													<ContextMenuItem>
-														Rotate
-													</ContextMenuItem>
-													<ContextMenuItem
-														onClick={() => {
-															try {
-																removePart({
-																	_id: id as string,
-																	partId: part.id,
-																});
-																toast({
-																	title: "Element removed",
-																	description: `Removed ${part.name} from canvas`,
-																});
-															} catch (error) {
-																toast({
-																	variant:
-																		"destructive",
-																	title: "Failed to remove element",
-																	description:
-																		error as string,
-																});
-															}
-														}}
-														className="hover:text-red-500 cursor-pointer"
-													>
-														Remove
-													</ContextMenuItem>
-												</ContextMenuContent>
-											</ContextMenu>
-											<DialogContent className="sm:max-w-md">
-												<DialogHeader>
-													<DialogTitle>
-														Rename Element
-													</DialogTitle>
-													<DialogDescription>
-														Enter a new name for the
-														element
-													</DialogDescription>
-												</DialogHeader>
-												<RenameElementForm
-													part={part}
-													initialName={part.name}
-												/>
-											</DialogContent>
-										</Dialog>
-									</div>
+															}}
+															className="hover:text-red-500 cursor-pointer"
+														>
+															Remove
+														</ContextMenuItem>
+													</ContextMenuContent>
+												</ContextMenu>
+												<DialogContent className="sm:max-w-md">
+													<DialogHeader>
+														<DialogTitle>
+															Rename Element
+														</DialogTitle>
+														<DialogDescription>
+															Enter a new name for
+															the element
+														</DialogDescription>
+													</DialogHeader>
+													<RenameElementForm
+														part={part}
+														initialName={part.name}
+													/>
+												</DialogContent>
+											</Dialog>
+										</div>
 
-									// </KeepScale>
-								))}
-							{/* </ContextMenuTrigger>
+										// </KeepScale>
+									))}
+								{/* </ContextMenuTrigger>
 					<ContextMenuContent>
 						<ContextMenuCheckboxItem
 							checked={showGrid}
@@ -523,9 +804,10 @@ export default function Canvas(): JSX.Element {
 						</ContextMenuCheckboxItem>
 					</ContextMenuContent>
 				</ContextMenu> */}
-						</div>
-					</ResizablePanel>
-				</ResizablePanelGroup>
+							</div>
+						</ResizablePanel>
+					</ResizablePanelGroup>
+				)}
 			</div>
 		</div>
 	);
