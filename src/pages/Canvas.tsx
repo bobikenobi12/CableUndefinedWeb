@@ -16,6 +16,18 @@ import {
 } from "@/components/ui/dialog";
 
 import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
+import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
@@ -30,9 +42,36 @@ import {
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 
+import {
+	PageHeader,
+	PageHeaderDescription,
+	PageHeaderHeading,
+} from "@/components/page-header";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "@/components/ui/form";
+
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectLabel,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+
+import { Input } from "@/components/ui/input";
+
 import { useToast } from "@/components/ui/use-toast";
 
-import { Home, Combine, CodeXml, Component, Settings, Mic } from "lucide-react";
+import { Combine, CodeXml, Component, Settings, Mic } from "lucide-react";
 
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
@@ -44,7 +83,11 @@ import {
 	useDeleteDiagramMutation,
 	useUpdateDiagramMutation,
 } from "@/redux/features/diagrams/diagrams-api-slice";
-import { selectDiagramById } from "@/redux/features/diagrams/diagrams-slice";
+import {
+	selectDiagramById,
+	selectOpenDeleteDiagramDialog,
+	setOpenDeleteDiagramDialog,
+} from "@/redux/features/diagrams/diagrams-slice";
 
 import {
 	useAddPartMutation,
@@ -75,35 +118,14 @@ import DiagramPart from "@/components/canvas/diagram-part";
 import { Pin } from "@/types/connections";
 import { Button } from "@/components/ui/button";
 import { Microcontroller } from "@/types/diagrams";
+
 import { CopyBlock } from "react-code-blocks";
-import {
-	PageHeader,
-	PageHeaderDescription,
-	PageHeaderHeading,
-} from "@/components/page-header";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 
 import { z } from "zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-	Select,
-	SelectContent,
-	SelectGroup,
-	SelectItem,
-	SelectLabel,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+
+import { useNavigate } from "react-router-dom";
 
 const schema = z.object({
 	name: z.string().nonempty(),
@@ -157,6 +179,9 @@ export default function Canvas(): JSX.Element {
 	);
 	const showGrid = useAppSelector(getShowGrid);
 	const tab = useAppSelector(selectTab);
+	const openDeleteDiagramDialog = useAppSelector(
+		selectOpenDeleteDiagramDialog
+	);
 
 	const [addPart, { isLoading: isLoadingAddPartMutation }] =
 		useAddPartMutation();
@@ -164,7 +189,7 @@ export default function Canvas(): JSX.Element {
 	const { toast, dismiss } = useToast();
 
 	const dispatch = useAppDispatch();
-
+	const navigate = useNavigate();
 	const handleCustomEvent = (event: CustomEvent) => {
 		const { pin } = event.detail;
 		const { elementName, pinName, x, y } = pin;
@@ -359,7 +384,7 @@ export default function Canvas(): JSX.Element {
 				{tab === Tab.SETTINGS ? (
 					<div className="flex flex-col w-fit-content p-2 space-y-2 px-4">
 						<PageHeader className="flex w-full flex-col-reverse items-center justify-between gap-4 px-6 md:flex-row">
-							<PageHeaderHeading>Setting</PageHeaderHeading>
+							<PageHeaderHeading>Settings</PageHeaderHeading>
 							<PageHeaderDescription>
 								Configure the settings for this diagram
 							</PageHeaderDescription>
@@ -526,27 +551,90 @@ export default function Canvas(): JSX.Element {
 									</div>
 								</CardHeader>
 								<CardContent>
-									<Button
-										variant="destructive"
-										onClick={() => {
-											try {
-												deleteDiagram(id as string);
-												toast({
-													title: "Diagram deleted",
-													description: `Deleted diagram with id ${id}`,
-												});
-											} catch (error) {
-												toast({
-													variant: "destructive",
-													title: "Failed to delete diagram",
-													description:
-														error as string,
-												});
-											}
-										}}
-									>
-										Delete Diagram
-									</Button>
+									<AlertDialog>
+										<AlertDialogTrigger asChild>
+											<Button
+												variant="destructive"
+												onClick={() =>
+													dispatch(
+														setOpenDeleteDiagramDialog(
+															{
+																open: true,
+															}
+														)
+													)
+												}
+											>
+												Delete Diagram
+											</Button>
+										</AlertDialogTrigger>
+										<AlertDialogContent>
+											<AlertDialogHeader>
+												<AlertDialogTitle>
+													Are you sure you want to
+													delete this diagram?
+												</AlertDialogTitle>
+												<AlertDialogDescription>
+													This action cannot be
+													undone. This will delete all
+													parts and settings
+													associated with this
+													diagram.
+												</AlertDialogDescription>
+											</AlertDialogHeader>
+											<AlertDialogFooter>
+												<AlertDialogCancel
+													onClick={() => {
+														dispatch(
+															setOpenDeleteDiagramDialog(
+																{
+																	open: false,
+																}
+															)
+														);
+													}}
+												>
+													Cancel
+												</AlertDialogCancel>
+												<AlertDialogAction className="px-0">
+													<Button
+														variant="destructive"
+														onClick={() => {
+															try {
+																deleteDiagram(
+																	id as string
+																).unwrap();
+																dispatch(
+																	setOpenDeleteDiagramDialog(
+																		{
+																			open: false,
+																		}
+																	)
+																);
+																navigate(
+																	"/dashboard"
+																);
+																toast({
+																	title: "Diagram deleted",
+																	description: `Deleted diagram with id ${id}`,
+																});
+															} catch (error) {
+																toast({
+																	variant:
+																		"destructive",
+																	title: "Failed to delete diagram",
+																	description:
+																		error as string,
+																});
+															}
+														}}
+													>
+														Delete Diagram
+													</Button>
+												</AlertDialogAction>
+											</AlertDialogFooter>
+										</AlertDialogContent>
+									</AlertDialog>
 								</CardContent>
 							</Card>
 						</div>
