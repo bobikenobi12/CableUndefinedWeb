@@ -2,8 +2,8 @@ enum SocketEvent {
 	LOGIN = "auth:login",
 	LOGOUT = "auth:logout",
 	REGISTER = "auth:register",
-	PREDICTION = "prediction",
-	GENERATE_CODE = "generateCode",
+	WIRING = "predictions:wiring",
+	CODE = "predictions:code",
 	USER_UPDATE = "users:update",
 	USER_DELETE = "users:delete",
 	GET_DIAGRAMS = "diagrams:get",
@@ -20,8 +20,9 @@ enum SocketEvent {
 enum SocketNamespace {
 	AUTH = "/auth",
 	USERS = "/users",
-	INDEX = "/",
+	PREDICTIONS = "/predictions",
 	DIAGRAMS = "/diagrams",
+	INDEX = "/",
 }
 
 export { SocketEvent, SocketNamespace };
