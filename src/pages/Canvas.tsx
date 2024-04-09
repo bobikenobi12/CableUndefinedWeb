@@ -119,15 +119,16 @@ import { Pin } from "@/types/connections";
 import { Button } from "@/components/ui/button";
 import { Microcontroller } from "@/types/diagrams";
 
-import { CopyBlock } from "react-code-blocks";
-
 import { z } from "zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useNavigate } from "react-router-dom";
 
-const schema = z.object({
+import { predictionModules } from "@/types/predictions";
+import { Icons } from "@/components/icons";
+
+const updateDiagramSchema = z.object({
 	name: z.string().nonempty(),
 	microcontroller: z.enum([
 		Microcontroller.ATTiny85,
@@ -137,7 +138,12 @@ const schema = z.object({
 	]),
 });
 
-type UpdateDiagramFormValues = z.infer<typeof schema>;
+const chooseModuleSchema = z.object({
+	module: z.string(),
+});
+
+type UpdateDiagramFormValues = z.infer<typeof updateDiagramSchema>;
+type ChooseModuleFormValues = z.infer<typeof chooseModuleSchema>;
 
 export default function Canvas(): JSX.Element {
 	const { id } = useParams<{ id: string }>();
@@ -266,12 +272,21 @@ export default function Canvas(): JSX.Element {
 		}
 	}
 
-	const form = useForm<UpdateDiagramFormValues>({
-		resolver: zodResolver(schema),
+	const updateDiagramForm = useForm<UpdateDiagramFormValues>({
+		resolver: zodResolver(updateDiagramSchema),
 		defaultValues: {
 			name: diagram?.name ?? "",
 			microcontroller:
 				diagram?.microcontroller ?? Microcontroller.ATTiny85,
+		},
+	});
+
+	const chooseModuleForm = useForm<ChooseModuleFormValues>({
+		resolver: zodResolver(chooseModuleSchema),
+		defaultValues: {
+			module: predictionModules[
+				diagram?.microcontroller || Microcontroller.ATTiny85
+			][0],
 		},
 	});
 
@@ -295,8 +310,32 @@ export default function Canvas(): JSX.Element {
 		}
 	};
 
+	const onSubmitChooseModuleForm: SubmitHandler<ChooseModuleFormValues> = (
+		data
+	) => {
+		// console.log(data);
+		try {
+			const payload = generateCode({
+				microcontroller: "ESP32",
+				module: data.module,
+				prompt: "Connect to wifi",
+			}).unwrap();
+			toast({
+				title: "Code generated",
+				description: "Code generated successfully",
+			});
+			// console.log(generatedCode);
+		} catch (error) {
+			toast({
+				variant: "destructive",
+				title: "Failed to generate code",
+				description: error as string,
+			});
+		}
+	};
+
 	return (
-		<div className="flex grow py-6">
+		<div className="flex flex-1">
 			<aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
 				<nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
 					<Tooltip>
@@ -380,7 +419,7 @@ export default function Canvas(): JSX.Element {
 					</Tooltip>
 				</nav>
 			</aside>
-			<div className="flex-1 relative lg:ml-14 h-full w-full">
+			<div className="flex-1 relative lg:ml-14 w-full">
 				{tab === Tab.SETTINGS ? (
 					<div className="flex flex-col w-fit-content p-2 space-y-2 px-4">
 						<PageHeader className="flex w-full flex-col-reverse items-center justify-between gap-4 px-6 md:flex-row">
@@ -402,9 +441,9 @@ export default function Canvas(): JSX.Element {
 								</CardHeader>
 								<CardContent>
 									<div className="flex flex-col">
-										<Form {...form}>
+										<Form {...updateDiagramForm}>
 											<form
-												onSubmit={form.handleSubmit(
+												onSubmit={updateDiagramForm.handleSubmit(
 													onSubmit
 												)}
 											>
@@ -412,7 +451,7 @@ export default function Canvas(): JSX.Element {
 													<div className="grid gap-3">
 														<FormField
 															control={
-																form.control
+																updateDiagramForm.control
 															}
 															name="name"
 															render={({
@@ -447,7 +486,7 @@ export default function Canvas(): JSX.Element {
 														/>
 														<FormField
 															control={
-																form.control
+																updateDiagramForm.control
 															}
 															name="microcontroller"
 															render={({
@@ -523,10 +562,10 @@ export default function Canvas(): JSX.Element {
 															type="submit"
 															disabled={
 																isLoadingUpdateDiagram ||
-																(form.getValues()
+																(updateDiagramForm.getValues()
 																	.name ===
 																	diagram?.name &&
-																	form.getValues()
+																	updateDiagramForm.getValues()
 																		.microcontroller ===
 																		diagram?.microcontroller)
 															}
@@ -551,7 +590,7 @@ export default function Canvas(): JSX.Element {
 									</div>
 								</CardHeader>
 								<CardContent>
-									<AlertDialog>
+									<AlertDialog open={openDeleteDiagramDialog}>
 										<AlertDialogTrigger asChild>
 											<Button
 												variant="destructive"
@@ -644,10 +683,7 @@ export default function Canvas(): JSX.Element {
 						direction="horizontal"
 						className="h-full"
 					>
-						<ResizablePanel
-							defaultSize={50}
-							onCompositionEnd={(e) => console.log(e)}
-						>
+						<ResizablePanel defaultSize={35}>
 							{tab === Tab.PARTS ? (
 								<div className="flex flex-col w-fit-content p-2 space-y-2">
 									<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
@@ -726,38 +762,101 @@ export default function Canvas(): JSX.Element {
 										Generate Code:
 									</h1>
 									<div className="flex flex-col items-center space-y-2">
-										<Button
-											onClick={() => {
-												try {
-													generateCode({
-														microcontroller:
-															diagram?.microcontroller as Microcontroller,
-														module: "wifi",
-														prompt: "Connect to wifi",
-													});
-													toast({
-														title: "Code generated",
-														description:
-															"Code generated successfully",
-													});
-												} catch (error) {
-													toast({
-														variant: "destructive",
-														title: "Failed to generate code",
-														description:
-															error as string,
-													});
-												}
-											}}
-										>
-											Generate Code
-										</Button>
+										<Form {...chooseModuleForm}>
+											<form
+												onSubmit={chooseModuleForm.handleSubmit(
+													onSubmitChooseModuleForm
+												)}
+											>
+												<FormField
+													control={
+														chooseModuleForm.control
+													}
+													name="module"
+													render={({ field }) => (
+														<FormItem>
+															<FormLabel>
+																Choose Module
+															</FormLabel>
+															<FormControl>
+																<Select
+																	{...field}
+																	onValueChange={
+																		field.onChange
+																	}
+																>
+																	<SelectTrigger>
+																		<SelectValue placeholder="Select a module" />
+																	</SelectTrigger>
+																	<SelectContent>
+																		<SelectGroup>
+																			<SelectLabel>
+																				Choose
+																				Module
+																			</SelectLabel>
+																			{predictionModules[
+																				diagram?.microcontroller ||
+																					Microcontroller.ATTiny85
+																			].map(
+																				(
+																					module,
+																					idx
+																				) => (
+																					<SelectItem
+																						key={
+																							idx
+																						}
+																						value={
+																							module
+																						}
+																					>
+																						{
+																							module
+																						}
+																					</SelectItem>
+																				)
+																			)}
+																		</SelectGroup>
+																	</SelectContent>
+																</Select>
+															</FormControl>
+															<FormMessage>
+																{
+																	chooseModuleForm
+																		.formState
+																		.errors
+																		.module
+																		?.message
+																}
+															</FormMessage>
+														</FormItem>
+													)}
+												/>
+												<Button
+													type="submit"
+													onClick={() => {
+														chooseModuleForm.handleSubmit(
+															onSubmitChooseModuleForm
+														);
+													}}
+												>
+													{isLoadingGenerateCodeMutation && (
+														<Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+													)}
+													Generate Code
+												</Button>
+											</form>
+										</Form>
 									</div>
-									<CopyBlock
-										text={generatedCode?.code as string}
-										language="c"
-										showLineNumbers={true}
-									/>
+									<pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+										<code className="text-white">
+											{JSON.stringify(
+												generatedCode?.code,
+												null,
+												2
+											)}
+										</code>
+									</pre>
 								</div>
 							) : tab === Tab.PREDICTION ? (
 								<div className="flex flex-col w-fit-content p-2 space-y-2">
@@ -770,8 +869,9 @@ export default function Canvas(): JSX.Element {
 												try {
 													generatePrediction({
 														microcontroller:
-															diagram?.microcontroller as Microcontroller,
-														module: "wifi",
+															// diagram?.microcontroller as Microcontroller,
+															"ESP32",
+														module: "LED",
 													});
 												} catch (error) {
 													toast({
@@ -786,18 +886,18 @@ export default function Canvas(): JSX.Element {
 											Generate Prediction
 										</Button>
 									</div>
-									<CopyBlock
+									{/* <CopyBlock
 										text={
 											generatedPrediction?.prediction as string
 										}
 										language="plaintext"
 										showLineNumbers={true}
-									/>
+									/> */}
 								</div>
 							) : null}
 						</ResizablePanel>
 						<ResizableHandle />
-						<ResizablePanel defaultSize={200}>
+						<ResizablePanel>
 							<div
 								className={`flex-1 relative ${
 									showGrid ? "scene-grid" : ""

@@ -1,0 +1,62 @@
+import { Microcontroller } from "./diagrams";
+
+type PredictionModules = {
+	[key in Microcontroller]: string[];
+};
+
+export const predictionModules: PredictionModules = {
+	"Arduino Nano": [
+		"LED",
+		"Resistor",
+		"Pushbutton",
+		"Joystick",
+		"Buzzer",
+		"Potentiometer",
+		"Photoresistor (LDR)",
+		"7-segment displays",
+		"SEN18 Water Sensor",
+		"Liquid Crystal Display (LCD)",
+		"SSD1306 OLED I2C display",
+		"Relay",
+		"Servo motor",
+		"HC-SR04 Ultrasonic Sensor",
+		"DHT11 Temperature and Humidity Sensor",
+		"Micro SD Card Module",
+		"NRF24L01 Wireless Transceiver",
+		"L298N Motor Driver",
+		"ILI9341 Display",
+		"Matrix Keypad 4x4",
+		"PN532 NFC Module",
+		"RC522 RFID Module",
+	],
+	"Rasberry Pi Pico": [
+		"LED",
+		"Resistor",
+		"Pushbutton",
+		"Joystick",
+		"Buzzer",
+		"Potentiometer",
+		"Photoresistor (LDR)",
+		"7-segment displays",
+		"Liquid Crystal Display (LCD)",
+		"SSD1306 OLED display",
+		"NRF2401 Wireless Transceiver",
+		"7-Segment Displays",
+	],
+	ESP32: [
+		"LED",
+		"Resistor",
+		"Pushbutton",
+		"Joystick",
+		"Buzzer",
+		"Potentiometer",
+		"Photoresistor (LDR)",
+		"7-segment displays",
+		"MPU6050 Gyroscope and Accelerometer",
+		"Matrix Keypad 4x4",
+		"NEO-6M GPS Module",
+		"L298N Motor Driver",
+		"RC522 RFID Module",
+	],
+	ATTiny85: ["LED", "Resistor"],
+};
