@@ -50,20 +50,23 @@ export function UserLoginForm({ className, ...props }: UserLoginFormProps) {
 		},
 	});
 
-	const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+	const onSubmit: SubmitHandler<FormValues> = (data: FormValues) => {
 		try {
-			await login({
+			login({
 				email: data.email,
 				password: data.password,
-			}).unwrap();
-			navigate("/dashboard");
-
-			toast({
-				title: "Welcome back!",
-				description: "You have successfully logged in.",
-			});
+			})
+				.unwrap()
+				.then((data) => {
+					toast({
+						title: "Welcome back!",
+						description: "You have successfully logged in.",
+					});
+					navigate("/dashboard");
+				});
 		} catch (error) {
 			toast({
+				variant: "destructive",
 				title: "An error occurred.",
 				description: "Unable to login to your account.",
 			});

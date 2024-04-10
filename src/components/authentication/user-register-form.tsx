@@ -20,7 +20,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const schema = z
 	.object({
@@ -32,9 +32,9 @@ const schema = z
 		email: z.string().email(),
 		password: z
 			.string()
-			.regex(/^((?=\S*?[A-Z])(?=\S*?[a-z])(?=\S*?[0-9]).{6,})\S$/, {
+			.regex(/^((?=\S*?[A-Z])(?=\S*?[a-z])(?=\S*?[0-9]).{8,})\S$/, {
 				message:
-					"Password must contain at least 6 characters, one uppercase letter, one lowercase letter, and one number",
+					"Password must contain at least 8 characters, one uppercase letter, one lowercase letter, and one number",
 			}),
 
 		confirmPassword: z.string(),
@@ -57,6 +57,7 @@ export function UserRegisterForm({
 	const [signUp, { isLoading }] = useRegisterMutation();
 
 	const searchParams = useSearchParams();
+	const navigate = useNavigate();
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(schema),
@@ -69,20 +70,24 @@ export function UserRegisterForm({
 		},
 	});
 
-	const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+	const onSubmit: SubmitHandler<FormValues> = (data: FormValues) => {
 		try {
-			await signUp({
+			signUp({
 				email: data.email,
 				password: data.password,
 				username: data.username,
-			}).unwrap();
-
-			toast({
-				title: "Account created.",
-				description: "We've created your account for you.",
-			});
+			})
+				.unwrap()
+				.then(() => {
+					navigate("/login");
+					toast({
+						title: "Account created.",
+						description: "We've created your account for you.",
+					});
+				});
 		} catch (error) {
 			toast({
+				variant: "destructive",
 				title: "An error occurred.",
 				description: "Unable to create your account.",
 			});

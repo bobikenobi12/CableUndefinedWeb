@@ -261,6 +261,28 @@ export default function Canvas(): JSX.Element {
 		}
 	}, [isLoadingRemovePartMutation]);
 
+	useEffect(() => {
+		if (connection[0] !== "" && connection[1] !== "") {
+			try {
+				createConnection({
+					_id: id as string,
+					connection: [connection[0], connection[1]],
+				}).unwrap();
+				toast({
+					title: "Connection created",
+					description: `Connection between ${connection[0]} and ${connection[1]} created`,
+				});
+				setConnection({ 0: "", 1: "" });
+			} catch (error) {
+				toast({
+					variant: "destructive",
+					title: "Failed to create connection",
+					description: error as string,
+				});
+			}
+		}
+	}, [connection]);
+
 	function removePartHandler(partId: string) {
 		try {
 			removePart({
