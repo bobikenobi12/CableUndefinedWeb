@@ -830,7 +830,7 @@ export default function Canvas(): JSX.Element {
 												</span>
 											</div>
 										) : generatedPrediction !== "" ? (
-											<pre className="text-white dark:text-gray-200 whitespace-pre-wrap">
+											<pre className="mt-2 rounded-md p-4 bg-slate-950 dark:bg-gray-800 max-w-sm overflow-x-auto text-white">
 												{generatedPrediction}
 											</pre>
 										) : (
