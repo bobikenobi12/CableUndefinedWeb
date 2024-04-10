@@ -16,6 +16,18 @@ import {
 } from "@/components/ui/dialog";
 
 import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
+import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
@@ -30,52 +42,6 @@ import {
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 
-import { useToast } from "@/components/ui/use-toast";
-
-import { Home, Combine, CodeXml, Component, Settings, Mic } from "lucide-react";
-
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import {
-	toggleGrid,
-	getShowGrid,
-} from "@/redux/features/diagrams/wokwi-elements-slice";
-
-import {
-	useDeleteDiagramMutation,
-	useUpdateDiagramMutation,
-} from "@/redux/features/diagrams/diagrams-api-slice";
-import { selectDiagramById } from "@/redux/features/diagrams/diagrams-slice";
-
-import {
-	useAddPartMutation,
-	useRemovePartMutation,
-} from "@/redux/features/parts/parts-api-slice";
-
-import {
-	useCreateConnectionMutation,
-	useDeleteConnectionMutation,
-} from "@/redux/features/connections/connections-api-slice";
-
-import {
-	useLazyGenerateCodeQuery,
-	useLazyPredictionsQuery,
-} from "@/redux/features/index/index-api-slice";
-import { Tab, setTab, selectTab } from "@/redux/features/index/index-slice";
-
-import { RenameElementForm } from "@/components/canvas/element-context.menu";
-
-import {
-	partMappings,
-	partTagsToConnectionStrings,
-} from "@/types/wokwi-elements-mapping";
-
-import { useParams } from "react-router-dom";
-
-import DiagramPart from "@/components/canvas/diagram-part";
-import { Pin } from "@/types/connections";
-import { Button } from "@/components/ui/button";
-import { Microcontroller } from "@/types/diagrams";
-import { CopyBlock } from "react-code-blocks";
 import {
 	PageHeader,
 	PageHeaderDescription,
@@ -90,11 +56,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 
-import { z } from "zod";
-import { useForm, SubmitHandler } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
 	Select,
 	SelectContent,
@@ -105,7 +67,78 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 
-const schema = z.object({
+import { Input } from "@/components/ui/input";
+
+import { useToast } from "@/components/ui/use-toast";
+
+import { Icons } from "@/components/icons";
+
+import { Combine, CodeXml, Component, Settings } from "lucide-react";
+
+import { useTheme } from "@/hooks/useTheme";
+
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import {
+	toggleGrid,
+	getShowGrid,
+} from "@/redux/features/diagrams/wokwi-elements-slice";
+
+import {
+	useDeleteDiagramMutation,
+	useUpdateDiagramMutation,
+} from "@/redux/features/diagrams/diagrams-api-slice";
+import {
+	selectDiagramById,
+	selectOpenDeleteDiagramDialog,
+	setOpenDeleteDiagramDialog,
+} from "@/redux/features/diagrams/diagrams-slice";
+
+import {
+	useAddPartMutation,
+	useRemovePartMutation,
+} from "@/redux/features/parts/parts-api-slice";
+
+import {
+	useCreateConnectionMutation,
+	useDeleteConnectionMutation,
+} from "@/redux/features/connections/connections-api-slice";
+
+import {
+	useLazyCodeQuery,
+	useLazyWiringQuery,
+} from "@/redux/features/predictions/predictions-api-slice";
+import {
+	Tab,
+	setTab,
+	selectTab,
+	selectCode,
+	selectPrediction,
+} from "@/redux/features/predictions/predictions-slice";
+
+import { RenameElementForm } from "@/components/canvas/element-context.menu";
+
+import {
+	partMappings,
+	partTagsToConnectionStrings,
+} from "@/types/wokwi-elements-mapping";
+
+import { useParams } from "react-router-dom";
+
+import DiagramPart from "@/components/canvas/diagram-part";
+import { Pin } from "@/types/connections";
+import { Button } from "@/components/ui/button";
+import { Microcontroller } from "@/types/diagrams";
+
+import { z } from "zod";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+import { useNavigate } from "react-router-dom";
+
+import { predictionModules } from "@/types/predictions";
+import { CopyBlock, atomOneDark, atomOneLight } from "react-code-blocks";
+
+const updateDiagramSchema = z.object({
 	name: z.string().nonempty(),
 	microcontroller: z.enum([
 		Microcontroller.ATTiny85,
@@ -115,7 +148,12 @@ const schema = z.object({
 	]),
 });
 
-type UpdateDiagramFormValues = z.infer<typeof schema>;
+const chooseModuleSchema = z.object({
+	module: z.string(),
+});
+
+type UpdateDiagramFormValues = z.infer<typeof updateDiagramSchema>;
+type ChooseModuleFormValues = z.infer<typeof chooseModuleSchema>;
 
 export default function Canvas(): JSX.Element {
 	const { id } = useParams<{ id: string }>();
@@ -140,31 +178,32 @@ export default function Canvas(): JSX.Element {
 	const [createConnection, { isLoading: isLoadingCreateConnectionMutation }] =
 		useCreateConnectionMutation();
 
-	const [
-		generateCode,
-		{ data: generatedCode, isLoading: isLoadingGenerateCodeMutation },
-	] = useLazyGenerateCodeQuery();
+	const [generateCode, { isLoading: isLoadingGenerateCodeMutation }] =
+		useLazyCodeQuery();
 	const [
 		generatePrediction,
-		{
-			data: generatedPrediction,
-			isLoading: isLoadingGeneratePredictionMutation,
-		},
-	] = useLazyPredictionsQuery();
+		{ isLoading: isLoadingGeneratePredictionMutation },
+	] = useLazyWiringQuery();
 
 	const diagram = useAppSelector((state) =>
 		selectDiagramById(state, id as string)
 	);
 	const showGrid = useAppSelector(getShowGrid);
 	const tab = useAppSelector(selectTab);
+	const openDeleteDiagramDialog = useAppSelector(
+		selectOpenDeleteDiagramDialog
+	);
+	const generatedCode = useAppSelector(selectCode);
+	const generatedPrediction = useAppSelector(selectPrediction);
 
 	const [addPart, { isLoading: isLoadingAddPartMutation }] =
 		useAddPartMutation();
 
-	const { toast, dismiss } = useToast();
+	const { theme } = useTheme();
+	const { toast, dismiss, toasts } = useToast();
 
 	const dispatch = useAppDispatch();
-
+	const navigate = useNavigate();
 	const handleCustomEvent = (event: CustomEvent) => {
 		const { pin } = event.detail;
 		const { elementName, pinName, x, y } = pin;
@@ -241,12 +280,21 @@ export default function Canvas(): JSX.Element {
 		}
 	}
 
-	const form = useForm<UpdateDiagramFormValues>({
-		resolver: zodResolver(schema),
+	const updateDiagramForm = useForm<UpdateDiagramFormValues>({
+		resolver: zodResolver(updateDiagramSchema),
 		defaultValues: {
 			name: diagram?.name ?? "",
 			microcontroller:
 				diagram?.microcontroller ?? Microcontroller.ATTiny85,
+		},
+	});
+
+	const chooseModuleForm = useForm<ChooseModuleFormValues>({
+		resolver: zodResolver(chooseModuleSchema),
+		defaultValues: {
+			module: predictionModules[
+				diagram?.microcontroller || Microcontroller.ATTiny85
+			][0],
 		},
 	});
 
@@ -270,8 +318,43 @@ export default function Canvas(): JSX.Element {
 		}
 	};
 
+	const onSubmitChooseModuleForm: SubmitHandler<ChooseModuleFormValues> = (
+		data
+	) => {
+		// console.log(data);
+		try {
+			generateCode({
+				microcontroller: "ESP32",
+				module: data.module,
+				prompt: "Connect to wifi",
+			})
+				.unwrap()
+				.then((res) => {
+					toast({
+						title: "Code generated",
+						description: "Code generated successfully",
+					});
+					console.log(res);
+					dismiss("generate-code");
+				});
+			toast({
+				itemID: "generate-code",
+				title: "Code is being generated",
+				description: "Generating code for the selected module",
+				action: <Icons.spinner className="h-4 w-4 animate-spin" />,
+			});
+			console.log(generatedCode);
+		} catch (error) {
+			toast({
+				variant: "destructive",
+				title: "Failed to generate code",
+				description: error as string,
+			});
+		}
+	};
+
 	return (
-		<div className="flex grow py-6">
+		<div className="flex flex-1">
 			<aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
 				<nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
 					<Tooltip>
@@ -355,11 +438,11 @@ export default function Canvas(): JSX.Element {
 					</Tooltip>
 				</nav>
 			</aside>
-			<div className="flex-1 relative lg:ml-14 h-full w-full">
+			<div className="flex-1 relative ml-14 w-full">
 				{tab === Tab.SETTINGS ? (
 					<div className="flex flex-col w-fit-content p-2 space-y-2 px-4">
 						<PageHeader className="flex w-full flex-col-reverse items-center justify-between gap-4 px-6 md:flex-row">
-							<PageHeaderHeading>Setting</PageHeaderHeading>
+							<PageHeaderHeading>Settings</PageHeaderHeading>
 							<PageHeaderDescription>
 								Configure the settings for this diagram
 							</PageHeaderDescription>
@@ -377,9 +460,9 @@ export default function Canvas(): JSX.Element {
 								</CardHeader>
 								<CardContent>
 									<div className="flex flex-col">
-										<Form {...form}>
+										<Form {...updateDiagramForm}>
 											<form
-												onSubmit={form.handleSubmit(
+												onSubmit={updateDiagramForm.handleSubmit(
 													onSubmit
 												)}
 											>
@@ -387,7 +470,7 @@ export default function Canvas(): JSX.Element {
 													<div className="grid gap-3">
 														<FormField
 															control={
-																form.control
+																updateDiagramForm.control
 															}
 															name="name"
 															render={({
@@ -422,7 +505,7 @@ export default function Canvas(): JSX.Element {
 														/>
 														<FormField
 															control={
-																form.control
+																updateDiagramForm.control
 															}
 															name="microcontroller"
 															render={({
@@ -498,10 +581,10 @@ export default function Canvas(): JSX.Element {
 															type="submit"
 															disabled={
 																isLoadingUpdateDiagram ||
-																(form.getValues()
+																(updateDiagramForm.getValues()
 																	.name ===
 																	diagram?.name &&
-																	form.getValues()
+																	updateDiagramForm.getValues()
 																		.microcontroller ===
 																		diagram?.microcontroller)
 															}
@@ -526,27 +609,90 @@ export default function Canvas(): JSX.Element {
 									</div>
 								</CardHeader>
 								<CardContent>
-									<Button
-										variant="destructive"
-										onClick={() => {
-											try {
-												deleteDiagram(id as string);
-												toast({
-													title: "Diagram deleted",
-													description: `Deleted diagram with id ${id}`,
-												});
-											} catch (error) {
-												toast({
-													variant: "destructive",
-													title: "Failed to delete diagram",
-													description:
-														error as string,
-												});
-											}
-										}}
-									>
-										Delete Diagram
-									</Button>
+									<AlertDialog open={openDeleteDiagramDialog}>
+										<AlertDialogTrigger asChild>
+											<Button
+												variant="destructive"
+												onClick={() =>
+													dispatch(
+														setOpenDeleteDiagramDialog(
+															{
+																open: true,
+															}
+														)
+													)
+												}
+											>
+												Delete Diagram
+											</Button>
+										</AlertDialogTrigger>
+										<AlertDialogContent>
+											<AlertDialogHeader>
+												<AlertDialogTitle>
+													Are you sure you want to
+													delete this diagram?
+												</AlertDialogTitle>
+												<AlertDialogDescription>
+													This action cannot be
+													undone. This will delete all
+													parts and settings
+													associated with this
+													diagram.
+												</AlertDialogDescription>
+											</AlertDialogHeader>
+											<AlertDialogFooter>
+												<AlertDialogCancel
+													onClick={() => {
+														dispatch(
+															setOpenDeleteDiagramDialog(
+																{
+																	open: false,
+																}
+															)
+														);
+													}}
+												>
+													Cancel
+												</AlertDialogCancel>
+												<AlertDialogAction className="px-0">
+													<Button
+														variant="destructive"
+														onClick={() => {
+															try {
+																deleteDiagram(
+																	id as string
+																).unwrap();
+																dispatch(
+																	setOpenDeleteDiagramDialog(
+																		{
+																			open: false,
+																		}
+																	)
+																);
+																navigate(
+																	"/dashboard"
+																);
+																toast({
+																	title: "Diagram deleted",
+																	description: `Deleted diagram with id ${id}`,
+																});
+															} catch (error) {
+																toast({
+																	variant:
+																		"destructive",
+																	title: "Failed to delete diagram",
+																	description:
+																		error as string,
+																});
+															}
+														}}
+													>
+														Delete Diagram
+													</Button>
+												</AlertDialogAction>
+											</AlertDialogFooter>
+										</AlertDialogContent>
+									</AlertDialog>
 								</CardContent>
 							</Card>
 						</div>
@@ -556,12 +702,9 @@ export default function Canvas(): JSX.Element {
 						direction="horizontal"
 						className="h-full"
 					>
-						<ResizablePanel
-							defaultSize={50}
-							onCompositionEnd={(e) => console.log(e)}
-						>
+						<ResizablePanel defaultSize={40}>
 							{tab === Tab.PARTS ? (
-								<div className="flex flex-col w-fit-content p-2 space-y-2">
+								<div className="flex flex-col w-fit-content p-2 space-y-2 h-full">
 									<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
 										Choose Elements:
 									</h1>
@@ -633,43 +776,138 @@ export default function Canvas(): JSX.Element {
 									</ScrollArea>
 								</div>
 							) : tab === Tab.CODE ? (
-								<div className="flex flex-col w-fit-content p-2 space-y-2">
+								<div className="flex flex-col w-fit-content p-2 space-y-2 h-full">
 									<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
 										Generate Code:
 									</h1>
 									<div className="flex flex-col items-center space-y-2">
-										<Button
-											onClick={() => {
-												try {
-													generateCode({
-														microcontroller:
-															diagram?.microcontroller as Microcontroller,
-														module: "wifi",
-														prompt: "Connect to wifi",
-													});
-													toast({
-														title: "Code generated",
-														description:
-															"Code generated successfully",
-													});
-												} catch (error) {
-													toast({
-														variant: "destructive",
-														title: "Failed to generate code",
-														description:
-															error as string,
-													});
-												}
-											}}
-										>
-											Generate Code
-										</Button>
+										<Form {...chooseModuleForm}>
+											<form
+												onSubmit={chooseModuleForm.handleSubmit(
+													onSubmitChooseModuleForm
+												)}
+											>
+												<FormField
+													control={
+														chooseModuleForm.control
+													}
+													name="module"
+													render={({ field }) => (
+														<FormItem>
+															<FormLabel>
+																Choose Module
+															</FormLabel>
+															<FormControl>
+																<Select
+																	{...field}
+																	onValueChange={
+																		field.onChange
+																	}
+																>
+																	<SelectTrigger>
+																		<SelectValue placeholder="Select a module" />
+																	</SelectTrigger>
+																	<SelectContent>
+																		<SelectGroup>
+																			<SelectLabel>
+																				Choose
+																				Module
+																			</SelectLabel>
+																			{predictionModules[
+																				diagram?.microcontroller ||
+																					Microcontroller.ATTiny85
+																			].map(
+																				(
+																					module,
+																					idx
+																				) => (
+																					<SelectItem
+																						key={
+																							idx
+																						}
+																						value={
+																							module
+																						}
+																					>
+																						{
+																							module
+																						}
+																					</SelectItem>
+																				)
+																			)}
+																		</SelectGroup>
+																	</SelectContent>
+																</Select>
+															</FormControl>
+															<FormMessage>
+																{
+																	chooseModuleForm
+																		.formState
+																		.errors
+																		.module
+																		?.message
+																}
+															</FormMessage>
+														</FormItem>
+													)}
+												/>
+												<Button
+													type="submit"
+													onClick={() => {
+														chooseModuleForm.handleSubmit(
+															onSubmitChooseModuleForm
+														);
+													}}
+												>
+													{isLoadingGenerateCodeMutation && (
+														<Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+													)}
+													Generate Code
+												</Button>
+											</form>
+										</Form>
 									</div>
-									<CopyBlock
-										text={generatedCode?.code as string}
-										language="c"
-										showLineNumbers={true}
-									/>
+									{/* <pre className="mt-2 rounded-md p-4 bg-slate-950 dark:bg-gray-800 max-w-sm overflow-x-auto h-96"> */}
+									{isLoadingGenerateCodeMutation ? (
+										<div className="flex justify-center items-center">
+											<Icons.spinner className="h-6 w-6 animate-spin" />
+											<span className="ml-2 text-white">
+												Generating code...
+											</span>
+										</div>
+									) : generatedCode ? (
+										// <code className="text-white dark:text-gray-200 whitespace-pre-wrap">
+										// 	{JSON.stringify(
+										// 		generatedCode,
+										// 		null,
+										// 		2
+										// 	)}
+										// </code>
+										<div className="flex flex-1 flex-col items-center w-full overflow-y-scroll">
+											<span className="text-sm text-muted-foreground">
+												{generatedCode.beforeText}
+											</span>
+											<CopyBlock
+												language={
+													generatedCode.language
+												}
+												text={generatedCode.code}
+												showLineNumbers={false}
+												theme={
+													theme === "dark"
+														? atomOneDark
+														: atomOneLight
+												}
+												codeBlock
+											/>
+											<span className="text-sm text-muted-foreground">
+												{generatedCode.afterText}
+											</span>
+										</div>
+									) : (
+										"Code will be generated here"
+									)}
+									{/* </pre> */}
 								</div>
 							) : tab === Tab.PREDICTION ? (
 								<div className="flex flex-col w-fit-content p-2 space-y-2">
@@ -682,8 +920,9 @@ export default function Canvas(): JSX.Element {
 												try {
 													generatePrediction({
 														microcontroller:
-															diagram?.microcontroller as Microcontroller,
-														module: "wifi",
+															// diagram?.microcontroller as Microcontroller,
+															"ESP32",
+														module: "LED",
 													});
 												} catch (error) {
 													toast({
@@ -698,18 +937,11 @@ export default function Canvas(): JSX.Element {
 											Generate Prediction
 										</Button>
 									</div>
-									<CopyBlock
-										text={
-											generatedPrediction?.prediction as string
-										}
-										language="plaintext"
-										showLineNumbers={true}
-									/>
 								</div>
 							) : null}
 						</ResizablePanel>
 						<ResizableHandle />
-						<ResizablePanel defaultSize={200}>
+						<ResizablePanel>
 							<div
 								className={`flex-1 relative ${
 									showGrid ? "scene-grid" : ""

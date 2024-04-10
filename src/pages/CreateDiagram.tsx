@@ -152,7 +152,10 @@ export default function CreateDiagram() {
 											<FormLabel>
 												Microcontroller *
 											</FormLabel>
-											<Select {...field}>
+											<Select
+												{...field}
+												onValueChange={field.onChange}
+											>
 												<SelectTrigger>
 													<SelectValue placeholder="Select a microcontroller" />
 												</SelectTrigger>

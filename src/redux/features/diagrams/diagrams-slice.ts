@@ -12,11 +12,13 @@ import type { Part } from "@/types/parts";
 interface DiagramsState {
 	diagrams: Diagram[];
 	partsByDiagramId: { [diagramId: string]: Part[] };
+	openDeleteDiagramDialog: boolean;
 }
 
 const initialState: DiagramsState = {
 	diagrams: [],
 	partsByDiagramId: {},
+	openDeleteDiagramDialog: false,
 };
 
 export const diagramsSlice = createSlice({
@@ -44,6 +46,12 @@ export const diagramsSlice = createSlice({
 				}
 			}
 		},
+		setOpenDeleteDiagramDialog: (
+			state,
+			action: { payload: { open: boolean } }
+		) => {
+			state.openDeleteDiagramDialog = action.payload.open;
+		},
 	},
 	extraReducers: (builder) => {
 		builder.addMatcher(
@@ -57,6 +65,15 @@ export const diagramsSlice = createSlice({
 					},
 					{} as { [diagramId: string]: Part[] }
 				);
+			}
+		);
+		builder.addMatcher(
+			diagramsApiSlice.endpoints.deleteDiagram.matchFulfilled,
+			(state, action: { payload: { _id: string } }) => {
+				const { _id } = action.payload;
+				state.diagrams = state.diagrams.filter((d) => d._id !== _id);
+				delete state.partsByDiagramId[_id];
+				localStorage.removeItem("indexTable");
 			}
 		);
 		builder.addMatcher(
@@ -92,7 +109,7 @@ export const diagramsSlice = createSlice({
 	},
 });
 
-export const { dragPart } = diagramsSlice.actions;
+export const { dragPart, setOpenDeleteDiagramDialog } = diagramsSlice.actions;
 
 export const selectDiagrams = (state: RootState) => state.diagrams.diagrams;
 export const selectDiagramById = (state: RootState, id: string) =>
@@ -104,5 +121,7 @@ export const selectPartById = (
 	diagramId: string,
 	partId: string
 ) => state.diagrams.partsByDiagramId[diagramId].find((p) => p.id === partId);
+export const selectOpenDeleteDiagramDialog = (state: RootState) =>
+	state.diagrams.openDeleteDiagramDialog;
 
 export default diagramsSlice.reducer;
