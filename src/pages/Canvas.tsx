@@ -897,7 +897,7 @@ export default function Canvas(): JSX.Element {
 												Generating code...
 											</span>
 										</div>
-									) : generatedCode ? (
+									) : generatedCode.code !== "" ? (
 										// <code className="text-white dark:text-gray-200 whitespace-pre-wrap">
 										// 	{JSON.stringify(
 										// 		generatedCode,
@@ -905,8 +905,8 @@ export default function Canvas(): JSX.Element {
 										// 		2
 										// 	)}
 										// </code>
-										<div className="flex flex-1 flex-col items-center w-full overflow-y-scroll">
-											<span className="text-sm text-muted-foreground">
+										<div className="flex flex-1 flex-col items-center w-full overflow-y-scroll px-2 py-3 rounded-md bg-slate-950 dark:bg-gray-800">
+											<span className="text-sm text-muted-foreground mb-3">
 												{generatedCode.beforeText}
 											</span>
 											<CopyBlock
@@ -920,14 +920,19 @@ export default function Canvas(): JSX.Element {
 														? atomOneDark
 														: atomOneLight
 												}
+												wrapLongLines
 												codeBlock
 											/>
-											<span className="text-sm text-muted-foreground">
+											<span className="text-sm text-muted-foreground mt-3">
 												{generatedCode.afterText}
 											</span>
 										</div>
 									) : (
-										"Code will be generated here"
+										<div className="flex justify-center items-center mt-3">
+											<span className="text-white">
+												No code generated yet
+											</span>
+										</div>
 									)}
 									{/* </pre> */}
 								</div>
