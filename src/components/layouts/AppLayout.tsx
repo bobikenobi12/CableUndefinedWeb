@@ -36,6 +36,9 @@ import { Outlet } from "react-router-dom";
 
 import { UserCombobox } from "../user-combobox";
 import { DiagramsCombobox } from "../diagrams-combobox";
+import { Button } from "../ui/button";
+import { getPort, getWriter } from "@/utils/serial";
+import { addConnection } from "@/utils/pathfinding";
 
 export function CableUndefined() {
 	return (
@@ -124,6 +127,18 @@ export function Applayout() {
 								)}
 						</BreadcrumbList>
 					</Breadcrumb>
+
+					<Button
+						onClick={() => {
+							getPort().then((port) => {
+								if (port instanceof Error) {
+									return { response: port.message };
+								}
+							});
+						}}
+					>
+						Open Port
+					</Button>
 
 					<DropdownMenu>
 						<DropdownMenuTrigger>
