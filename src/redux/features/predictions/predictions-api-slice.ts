@@ -11,9 +11,9 @@ export interface PredictionRequest {
 export interface GenerateCodeRequest extends PredictionRequest {
 	prompt: string;
 }
-export const indexApiSlice = apiSlice.injectEndpoints({
+export const predictionsApiSlice = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({
-		predictions: builder.query<{ prediction: string }, PredictionRequest>({
+		wiring: builder.query<{ prediction: string }, PredictionRequest>({
 			queryFn: ({ microcontroller, module }) => {
 				const socket = getSocket(SocketNamespace.PREDICTIONS);
 
@@ -38,7 +38,7 @@ export const indexApiSlice = apiSlice.injectEndpoints({
 				});
 			},
 		}),
-		generateCode: builder.query<{ code: string }, GenerateCodeRequest>({
+		code: builder.query<{ code: string }, GenerateCodeRequest>({
 			queryFn: () => {
 				const socket = getSocket(SocketNamespace.PREDICTIONS);
 
@@ -48,18 +48,14 @@ export const indexApiSlice = apiSlice.injectEndpoints({
 					prompt: "Turn on an LED",
 					token: localStorage.getItem("_token"),
 				});
-				console.log("emitted");
 
 				return new Promise((resolve, reject) => {
 					socket.on(SocketEvent.CODE, (data: any) => {
-						console.log(data);
 						if ("error" in data) {
 							reject(data.error);
-							console.log(data.code);
 						} else {
-							console.log(data.code);
 							resolve({
-								data: data.code,
+								data,
 							});
 						}
 					});
@@ -70,7 +66,6 @@ export const indexApiSlice = apiSlice.injectEndpoints({
 	overrideExisting: false,
 });
 
-export const { useLazyGenerateCodeQuery, useLazyPredictionsQuery } =
-	indexApiSlice;
+export const { useLazyWiringQuery, useLazyCodeQuery } = predictionsApiSlice;
 
-export default indexApiSlice;
+export default predictionsApiSlice;

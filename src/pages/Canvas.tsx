@@ -71,7 +71,11 @@ import { Input } from "@/components/ui/input";
 
 import { useToast } from "@/components/ui/use-toast";
 
-import { Combine, CodeXml, Component, Settings, Mic } from "lucide-react";
+import { Icons } from "@/components/icons";
+
+import { Combine, CodeXml, Component, Settings } from "lucide-react";
+
+import { useTheme } from "@/hooks/useTheme";
 
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
@@ -100,10 +104,16 @@ import {
 } from "@/redux/features/connections/connections-api-slice";
 
 import {
-	useLazyGenerateCodeQuery,
-	useLazyPredictionsQuery,
-} from "@/redux/features/index/index-api-slice";
-import { Tab, setTab, selectTab } from "@/redux/features/index/index-slice";
+	useLazyCodeQuery,
+	useLazyWiringQuery,
+} from "@/redux/features/predictions/predictions-api-slice";
+import {
+	Tab,
+	setTab,
+	selectTab,
+	selectCode,
+	selectPrediction,
+} from "@/redux/features/predictions/predictions-slice";
 
 import { RenameElementForm } from "@/components/canvas/element-context.menu";
 
@@ -126,7 +136,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 
 import { predictionModules } from "@/types/predictions";
-import { Icons } from "@/components/icons";
+import { CopyBlock, atomOneDark, atomOneLight } from "react-code-blocks";
 
 const updateDiagramSchema = z.object({
 	name: z.string().nonempty(),
@@ -168,17 +178,12 @@ export default function Canvas(): JSX.Element {
 	const [createConnection, { isLoading: isLoadingCreateConnectionMutation }] =
 		useCreateConnectionMutation();
 
-	const [
-		generateCode,
-		{ data: generatedCode, isLoading: isLoadingGenerateCodeMutation },
-	] = useLazyGenerateCodeQuery();
+	const [generateCode, { isLoading: isLoadingGenerateCodeMutation }] =
+		useLazyCodeQuery();
 	const [
 		generatePrediction,
-		{
-			data: generatedPrediction,
-			isLoading: isLoadingGeneratePredictionMutation,
-		},
-	] = useLazyPredictionsQuery();
+		{ isLoading: isLoadingGeneratePredictionMutation },
+	] = useLazyWiringQuery();
 
 	const diagram = useAppSelector((state) =>
 		selectDiagramById(state, id as string)
@@ -188,11 +193,14 @@ export default function Canvas(): JSX.Element {
 	const openDeleteDiagramDialog = useAppSelector(
 		selectOpenDeleteDiagramDialog
 	);
+	const generatedCode = useAppSelector(selectCode);
+	const generatedPrediction = useAppSelector(selectPrediction);
 
 	const [addPart, { isLoading: isLoadingAddPartMutation }] =
 		useAddPartMutation();
 
-	const { toast, dismiss } = useToast();
+	const { theme } = useTheme();
+	const { toast, dismiss, toasts } = useToast();
 
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
@@ -315,16 +323,27 @@ export default function Canvas(): JSX.Element {
 	) => {
 		// console.log(data);
 		try {
-			const payload = generateCode({
+			generateCode({
 				microcontroller: "ESP32",
 				module: data.module,
 				prompt: "Connect to wifi",
-			}).unwrap();
+			})
+				.unwrap()
+				.then((res) => {
+					toast({
+						title: "Code generated",
+						description: "Code generated successfully",
+					});
+					console.log(res);
+					dismiss("generate-code");
+				});
 			toast({
-				title: "Code generated",
-				description: "Code generated successfully",
+				itemID: "generate-code",
+				title: "Code is being generated",
+				description: "Generating code for the selected module",
+				action: <Icons.spinner className="h-4 w-4 animate-spin" />,
 			});
-			// console.log(generatedCode);
+			console.log(generatedCode);
 		} catch (error) {
 			toast({
 				variant: "destructive",
@@ -419,7 +438,7 @@ export default function Canvas(): JSX.Element {
 					</Tooltip>
 				</nav>
 			</aside>
-			<div className="flex-1 relative lg:ml-14 w-full">
+			<div className="flex-1 relative ml-14 w-full">
 				{tab === Tab.SETTINGS ? (
 					<div className="flex flex-col w-fit-content p-2 space-y-2 px-4">
 						<PageHeader className="flex w-full flex-col-reverse items-center justify-between gap-4 px-6 md:flex-row">
@@ -683,9 +702,9 @@ export default function Canvas(): JSX.Element {
 						direction="horizontal"
 						className="h-full"
 					>
-						<ResizablePanel defaultSize={35}>
+						<ResizablePanel defaultSize={40}>
 							{tab === Tab.PARTS ? (
-								<div className="flex flex-col w-fit-content p-2 space-y-2">
+								<div className="flex flex-col w-fit-content p-2 space-y-2 h-full">
 									<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
 										Choose Elements:
 									</h1>
@@ -757,7 +776,7 @@ export default function Canvas(): JSX.Element {
 									</ScrollArea>
 								</div>
 							) : tab === Tab.CODE ? (
-								<div className="flex flex-col w-fit-content p-2 space-y-2">
+								<div className="flex flex-col w-fit-content p-2 space-y-2 h-full">
 									<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
 										Generate Code:
 									</h1>
@@ -848,15 +867,47 @@ export default function Canvas(): JSX.Element {
 											</form>
 										</Form>
 									</div>
-									<pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-										<code className="text-white">
-											{JSON.stringify(
-												generatedCode?.code,
-												null,
-												2
-											)}
-										</code>
-									</pre>
+									{/* <pre className="mt-2 rounded-md p-4 bg-slate-950 dark:bg-gray-800 max-w-sm overflow-x-auto h-96"> */}
+									{isLoadingGenerateCodeMutation ? (
+										<div className="flex justify-center items-center">
+											<Icons.spinner className="h-6 w-6 animate-spin" />
+											<span className="ml-2 text-white">
+												Generating code...
+											</span>
+										</div>
+									) : generatedCode ? (
+										// <code className="text-white dark:text-gray-200 whitespace-pre-wrap">
+										// 	{JSON.stringify(
+										// 		generatedCode,
+										// 		null,
+										// 		2
+										// 	)}
+										// </code>
+										<div className="flex flex-1 flex-col items-center w-full overflow-y-scroll">
+											<span className="text-sm text-muted-foreground">
+												{generatedCode.beforeText}
+											</span>
+											<CopyBlock
+												language={
+													generatedCode.language
+												}
+												text={generatedCode.code}
+												showLineNumbers={false}
+												theme={
+													theme === "dark"
+														? atomOneDark
+														: atomOneLight
+												}
+												codeBlock
+											/>
+											<span className="text-sm text-muted-foreground">
+												{generatedCode.afterText}
+											</span>
+										</div>
+									) : (
+										"Code will be generated here"
+									)}
+									{/* </pre> */}
 								</div>
 							) : tab === Tab.PREDICTION ? (
 								<div className="flex flex-col w-fit-content p-2 space-y-2">
@@ -886,13 +937,6 @@ export default function Canvas(): JSX.Element {
 											Generate Prediction
 										</Button>
 									</div>
-									{/* <CopyBlock
-										text={
-											generatedPrediction?.prediction as string
-										}
-										language="plaintext"
-										showLineNumbers={true}
-									/> */}
 								</div>
 							) : null}
 						</ResizablePanel>
