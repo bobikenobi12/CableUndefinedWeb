@@ -4,7 +4,7 @@ import { getSocket } from "@/utils/socket";
 import { Microcontroller } from "@/types/diagrams";
 
 export interface PredictionRequest {
-	microcontroller: "ESP32";
+	microcontroller: Microcontroller;
 	module: string;
 }
 
@@ -19,8 +19,8 @@ export const predictionsApiSlice = apiSlice.injectEndpoints({
 
 				socket.emit(SocketEvent.WIRING, {
 					token: localStorage.getItem("_token"),
-					microcontroller: "ESP32", // "Arduino Nano", "Rasberry Pi Pico", "ESP32"
-					module: "LED",
+					microcontroller,
+					module,
 				});
 
 				return new Promise((resolve, reject) => {
@@ -31,7 +31,7 @@ export const predictionsApiSlice = apiSlice.injectEndpoints({
 						} else {
 							console.log(data.prediction);
 							resolve({
-								data: data.prediction,
+								data: data,
 							});
 						}
 					});
@@ -39,13 +39,13 @@ export const predictionsApiSlice = apiSlice.injectEndpoints({
 			},
 		}),
 		code: builder.query<{ code: string }, GenerateCodeRequest>({
-			queryFn: () => {
+			queryFn: ({ microcontroller, module, prompt }) => {
 				const socket = getSocket(SocketNamespace.PREDICTIONS);
 
 				socket.emit(SocketEvent.CODE, {
-					microcontroller: "ESP32",
-					module: "MPU6050",
-					prompt: "Turn on an LED",
+					microcontroller,
+					module,
+					prompt,
 					token: localStorage.getItem("_token"),
 				});
 
