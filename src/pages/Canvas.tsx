@@ -114,6 +114,7 @@ import {
 	selectCode,
 	selectPrediction,
 } from "@/redux/features/predictions/predictions-slice";
+import { PredictionForm } from "@/components/canvas/prediction-form";
 
 import { RenameElementForm } from "@/components/canvas/element-context.menu";
 
@@ -135,7 +136,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useNavigate } from "react-router-dom";
 
-import { predictionModules } from "@/types/predictions";
 import { CopyBlock, atomOneDark, atomOneLight } from "react-code-blocks";
 
 const updateDiagramSchema = z.object({
@@ -148,12 +148,7 @@ const updateDiagramSchema = z.object({
 	]),
 });
 
-const chooseModuleSchema = z.object({
-	module: z.string(),
-});
-
 type UpdateDiagramFormValues = z.infer<typeof updateDiagramSchema>;
-type ChooseModuleFormValues = z.infer<typeof chooseModuleSchema>;
 
 export default function Canvas(): JSX.Element {
 	const { id } = useParams<{ id: string }>();
@@ -178,12 +173,9 @@ export default function Canvas(): JSX.Element {
 	const [createConnection, { isLoading: isLoadingCreateConnectionMutation }] =
 		useCreateConnectionMutation();
 
-	const [generateCode, { isLoading: isLoadingGenerateCodeMutation }] =
-		useLazyCodeQuery();
-	const [
-		generatePrediction,
-		{ isLoading: isLoadingGeneratePredictionMutation },
-	] = useLazyWiringQuery();
+	const [, { isLoading: isLoadingGeneratePredictionMutation }] =
+		useLazyWiringQuery();
+	const [, { isLoading: isLoadingGenerateCodeMutation }] = useLazyCodeQuery();
 
 	const diagram = useAppSelector((state) =>
 		selectDiagramById(state, id as string)
@@ -261,6 +253,28 @@ export default function Canvas(): JSX.Element {
 		}
 	}, [isLoadingRemovePartMutation]);
 
+	useEffect(() => {
+		if (connection[0] !== "" && connection[1] !== "") {
+			try {
+				createConnection({
+					_id: id as string,
+					connection: [connection[0], connection[1]],
+				}).unwrap();
+				toast({
+					title: "Connection created",
+					description: `Connection between ${connection[0]} and ${connection[1]} created`,
+				});
+				setConnection({ 0: "", 1: "" });
+			} catch (error) {
+				toast({
+					variant: "destructive",
+					title: "Failed to create connection",
+					description: error as string,
+				});
+			}
+		}
+	}, [connection]);
+
 	function removePartHandler(partId: string) {
 		try {
 			removePart({
@@ -289,15 +303,6 @@ export default function Canvas(): JSX.Element {
 		},
 	});
 
-	const chooseModuleForm = useForm<ChooseModuleFormValues>({
-		resolver: zodResolver(chooseModuleSchema),
-		defaultValues: {
-			module: predictionModules[
-				diagram?.microcontroller || Microcontroller.ATTiny85
-			][0],
-		},
-	});
-
 	const onSubmit: SubmitHandler<UpdateDiagramFormValues> = (data) => {
 		try {
 			updateDiagram({
@@ -313,41 +318,6 @@ export default function Canvas(): JSX.Element {
 			toast({
 				variant: "destructive",
 				title: "Failed to update diagram",
-				description: error as string,
-			});
-		}
-	};
-
-	const onSubmitChooseModuleForm: SubmitHandler<ChooseModuleFormValues> = (
-		data
-	) => {
-		// console.log(data);
-		try {
-			generateCode({
-				microcontroller: "ESP32",
-				module: data.module,
-				prompt: "Connect to wifi",
-			})
-				.unwrap()
-				.then((res) => {
-					toast({
-						title: "Code generated",
-						description: "Code generated successfully",
-					});
-					console.log(res);
-					dismiss("generate-code");
-				});
-			toast({
-				itemID: "generate-code",
-				title: "Code is being generated",
-				description: "Generating code for the selected module",
-				action: <Icons.spinner className="h-4 w-4 animate-spin" />,
-			});
-			console.log(generatedCode);
-		} catch (error) {
-			toast({
-				variant: "destructive",
-				title: "Failed to generate code",
 				description: error as string,
 			});
 		}
@@ -780,93 +750,7 @@ export default function Canvas(): JSX.Element {
 									<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
 										Generate Code:
 									</h1>
-									<div className="flex flex-col items-center space-y-2">
-										<Form {...chooseModuleForm}>
-											<form
-												onSubmit={chooseModuleForm.handleSubmit(
-													onSubmitChooseModuleForm
-												)}
-											>
-												<FormField
-													control={
-														chooseModuleForm.control
-													}
-													name="module"
-													render={({ field }) => (
-														<FormItem>
-															<FormLabel>
-																Choose Module
-															</FormLabel>
-															<FormControl>
-																<Select
-																	{...field}
-																	onValueChange={
-																		field.onChange
-																	}
-																>
-																	<SelectTrigger>
-																		<SelectValue placeholder="Select a module" />
-																	</SelectTrigger>
-																	<SelectContent>
-																		<SelectGroup>
-																			<SelectLabel>
-																				Choose
-																				Module
-																			</SelectLabel>
-																			{predictionModules[
-																				diagram?.microcontroller ||
-																					Microcontroller.ATTiny85
-																			].map(
-																				(
-																					module,
-																					idx
-																				) => (
-																					<SelectItem
-																						key={
-																							idx
-																						}
-																						value={
-																							module
-																						}
-																					>
-																						{
-																							module
-																						}
-																					</SelectItem>
-																				)
-																			)}
-																		</SelectGroup>
-																	</SelectContent>
-																</Select>
-															</FormControl>
-															<FormMessage>
-																{
-																	chooseModuleForm
-																		.formState
-																		.errors
-																		.module
-																		?.message
-																}
-															</FormMessage>
-														</FormItem>
-													)}
-												/>
-												<Button
-													type="submit"
-													onClick={() => {
-														chooseModuleForm.handleSubmit(
-															onSubmitChooseModuleForm
-														);
-													}}
-												>
-													{isLoadingGenerateCodeMutation && (
-														<Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-													)}
-													Generate Code
-												</Button>
-											</form>
-										</Form>
-									</div>
+
 									{/* <pre className="mt-2 rounded-md p-4 bg-slate-950 dark:bg-gray-800 max-w-sm overflow-x-auto h-96"> */}
 									{isLoadingGenerateCodeMutation ? (
 										<div className="flex justify-center items-center">
@@ -875,7 +759,7 @@ export default function Canvas(): JSX.Element {
 												Generating code...
 											</span>
 										</div>
-									) : generatedCode ? (
+									) : generatedCode.code !== "" ? (
 										// <code className="text-white dark:text-gray-200 whitespace-pre-wrap">
 										// 	{JSON.stringify(
 										// 		generatedCode,
@@ -883,8 +767,8 @@ export default function Canvas(): JSX.Element {
 										// 		2
 										// 	)}
 										// </code>
-										<div className="flex flex-1 flex-col items-center w-full overflow-y-scroll">
-											<span className="text-sm text-muted-foreground">
+										<div className="flex flex-1 flex-col items-center w-full overflow-y-scroll px-2 py-3 rounded-md bg-slate-950 dark:bg-gray-800">
+											<span className="text-sm text-muted-foreground mb-3">
 												{generatedCode.beforeText}
 											</span>
 											<CopyBlock
@@ -898,15 +782,29 @@ export default function Canvas(): JSX.Element {
 														? atomOneDark
 														: atomOneLight
 												}
+												wrapLongLines
 												codeBlock
 											/>
-											<span className="text-sm text-muted-foreground">
+											<span className="text-sm text-muted-foreground mt-3">
 												{generatedCode.afterText}
 											</span>
 										</div>
 									) : (
-										"Code will be generated here"
+										<div className="flex justify-center items-center mt-3">
+											<span className="text-white">
+												No code generated yet
+											</span>
+										</div>
 									)}
+									<div className="flex flex-col items-center space-y-2">
+										<PredictionForm
+											microcontroller={
+												diagram?.microcontroller ||
+												Microcontroller.ATTiny85
+											}
+											type="code"
+										/>
+									</div>
 									{/* </pre> */}
 								</div>
 							) : tab === Tab.PREDICTION ? (
@@ -915,27 +813,33 @@ export default function Canvas(): JSX.Element {
 										Prediction:
 									</h1>
 									<div className="flex flex-col items-center space-y-2">
-										<Button
-											onClick={() => {
-												try {
-													generatePrediction({
-														microcontroller:
-															// diagram?.microcontroller as Microcontroller,
-															"ESP32",
-														module: "LED",
-													});
-												} catch (error) {
-													toast({
-														variant: "destructive",
-														title: "Failed to generate prediction",
-														description:
-															error as string,
-													});
-												}
-											}}
-										>
-											Generate Prediction
-										</Button>
+										<PredictionForm
+											microcontroller={
+												diagram?.microcontroller ||
+												Microcontroller.ATTiny85
+											}
+											type="wiring"
+										/>
+									</div>
+									<div className="flex flex-col items-center space-y-2">
+										{isLoadingGeneratePredictionMutation ? (
+											<div className="flex justify-center items-center">
+												<Icons.spinner className="h-6 w-6 animate-spin" />
+												<span className="ml-2 text-white">
+													Generating prediction...
+												</span>
+											</div>
+										) : generatedPrediction !== "" ? (
+											<pre className="mt-2 rounded-md p-4 bg-slate-950 dark:bg-gray-800 max-w-sm overflow-x-auto text-white">
+												{generatedPrediction}
+											</pre>
+										) : (
+											<div className="flex justify-center items-center mt-3">
+												<span className="text-white">
+													No prediction generated yet
+												</span>
+											</div>
+										)}
 									</div>
 								</div>
 							) : null}

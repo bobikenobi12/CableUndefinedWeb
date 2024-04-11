@@ -554,6 +554,7 @@ export function removeConnection(connection: [Pin, Pin]) {
 }
 
 export function resetGraph() {
+	console.log("Graph has been reset!");
 	graph.globalUsedPins.fill(false);
 }
 

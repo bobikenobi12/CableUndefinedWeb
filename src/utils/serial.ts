@@ -37,4 +37,10 @@ function getWriter() {
 	return writer;
 }
 
-export { getPort, closePort, getWriter };
+function getReader() {
+	// @ts-ignore
+	const reader = port.readable.getReader();
+	return reader;
+}
+
+export { getPort, closePort, getWriter, getReader };
