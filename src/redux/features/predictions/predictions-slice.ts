@@ -57,14 +57,12 @@ export const predictionsSlice = createSlice({
 		builder.addMatcher(
 			predictionsApiSlice.endpoints.wiring.matchFulfilled,
 			(state, action) => {
-				console.log(action.payload);
 				state.prediction = action.payload.prediction;
 			}
 		);
 		builder.addMatcher(
 			predictionsApiSlice.endpoints.code.matchFulfilled,
 			(state, action) => {
-				console.log(action.payload);
 				const { beforeText, language, code, afterText } =
 					splitCodeResponse(action.payload.code);
 

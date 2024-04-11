@@ -32,6 +32,8 @@ import type { Diagram } from "@/types/diagrams";
 import { useNavigate, useParams } from "react-router-dom";
 import { Skeleton } from "./ui/skeleton";
 
+import { resetGraph } from "@/utils/pathfinding";
+
 export function DiagramsCombobox() {
 	const { id } = useParams();
 
@@ -60,6 +62,10 @@ export function DiagramsCombobox() {
 			navigate("/dashboard");
 		}
 	}, [diagrams]);
+
+	React.useEffect(() => {
+		resetGraph();
+	}, []);
 
 	if (isLoading) {
 		return <Skeleton className="w-[220px] h-10" />;
@@ -111,6 +117,7 @@ export function DiagramsCombobox() {
 									onSelect={() => {
 										navigate(`/dashboard/${diagram._id}`);
 										setCurrentDiagram(diagram);
+										resetGraph();
 										setOpen(false);
 									}}
 								>

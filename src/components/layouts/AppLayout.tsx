@@ -21,10 +21,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { CreditCard, LogOut, User } from "lucide-react";
 
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+
 import {
 	selectUser,
 	setOpenProfile,
 } from "@/redux/features/auth/auth-handler-slice";
+
+import { selectDiagramById } from "@/redux/features/diagrams/diagrams-slice";
 
 import { useLogoutMutation } from "@/redux/features/auth/auth-api-slice";
 import { logout } from "@/redux/features/auth/auth-handler-slice";
@@ -37,8 +40,12 @@ import { Outlet } from "react-router-dom";
 import { UserCombobox } from "../user-combobox";
 import { DiagramsCombobox } from "../diagrams-combobox";
 import { Button } from "../ui/button";
-import { getPort, getWriter } from "@/utils/serial";
+
+import { getPort, getReader, getWriter } from "@/utils/serial";
 import { addConnection } from "@/utils/pathfinding";
+
+import { useParams } from "react-router-dom";
+import { Icons } from "../icons";
 
 export function CableUndefined() {
 	return (
@@ -58,7 +65,12 @@ export function CableUndefined() {
 }
 
 export function Applayout() {
+	const { id } = useParams();
+
 	const user = useAppSelector(selectUser);
+	const diagram = useAppSelector((state) =>
+		selectDiagramById(state, id || "")
+	);
 
 	const dispatch = useAppDispatch();
 	const [logoutMutation, { isLoading, isError }] = useLogoutMutation();
@@ -70,18 +82,25 @@ export function Applayout() {
 
 	const navigate = useNavigate();
 
-	const handleLogout = async () => {
+	const handleLogout = () => {
 		try {
-			logoutMutation().unwrap();
-			dispatch(logout());
-			dispatch(setOpenProfile(false));
+			logoutMutation()
+				.unwrap()
+				.then(() => {
+					dispatch(logout());
+					dispatch(setOpenProfile(false));
+					toast({
+						title: "Success",
+						description: "Logged out successfully",
+					});
+					navigate("/login");
+				});
 			toast({
-				title: "Success",
-				description: "Logged out successfully",
+				title: "Logging out...",
+				description: "Please wait",
+				action: <Icons.spinner className="animate-spin h-6 w-6" />,
 			});
-			// navigate("/login");
 		} catch (error) {
-			console.error(error);
 			toast({
 				title: "Error",
 				description: "An error occurred while logging out",
@@ -127,18 +146,100 @@ export function Applayout() {
 								)}
 						</BreadcrumbList>
 					</Breadcrumb>
+					{match && location.pathname !== "/dashboard/new" && (
+						<Button
+							onClick={() => {
+								getPort().then((port) => {
+									if (port instanceof Error) {
+										return { response: port.message };
+									}
+									const writer = getWriter();
+									const reader = getReader();
+									try {
+										diagram?.connections.forEach(
+											(connection) => {
+												let result =
+													addConnection(connection);
+												if (
+													result.connections
+														.length === 0
+												) {
+													toast({
+														title: "Connection Error",
+														description: `No connections found for ${connection[0]} to ${connection[1]}`,
+														variant: "destructive",
+													});
+													return;
+												}
+												writer.write(
+													new TextEncoder().encode(
+														result.connections.join(
+															"\n"
+														)
+													)
+												);
+												writer.releaseLock();
+											}
+										);
 
-					<Button
-						onClick={() => {
-							getPort().then((port) => {
-								if (port instanceof Error) {
-									return { response: port.message };
-								}
-							});
-						}}
-					>
-						Open Port
-					</Button>
+										const response = new Promise(
+											(resolve, reject) => {
+												let response = "";
+												while (port.readable) {
+													console.log("Reading...");
+
+													reader
+														.read()
+														.then(
+															({
+																value,
+																done,
+															}: any) => {
+																if (done) {
+																	resolve(
+																		response
+																	);
+																}
+																response +=
+																	new TextDecoder().decode(
+																		value
+																	);
+															}
+														)
+														.catch((error: any) => {
+															toast({
+																title: "Error",
+																description:
+																	error,
+																variant:
+																	"destructive",
+															});
+															reject(error);
+														});
+												}
+											}
+										);
+
+										response.then((data: any | string) => {
+											toast({
+												title: "Response",
+												description: data,
+											});
+										});
+									} catch (error) {
+										toast({
+											title: "Error",
+											description: (error as Error)
+												.message,
+											variant: "destructive",
+										});
+									}
+								});
+							}}
+						>
+							Open Port
+						</Button>
+					)}
 
 					<DropdownMenu>
 						<DropdownMenuTrigger>

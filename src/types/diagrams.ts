@@ -9,7 +9,7 @@ interface Diagram {
 	name: string;
 	microcontroller: Microcontroller;
 	parts: Part[];
-	connection: Connection[];
+	connections: Connection[];
 }
 
 enum Microcontroller {
