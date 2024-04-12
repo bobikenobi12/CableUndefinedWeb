@@ -5,19 +5,18 @@ import { authenticatedRouter, unauthenticatedRouter } from "./Router";
 
 import { useAppSelector } from "@/redux/hooks";
 import { selectIsAuthenticated } from "@/redux/features/auth/auth-handler-slice";
+import SerialProvider from "./contexts/SerialContext";
 
 export default function App() {
 	const isAuthenticated = useAppSelector(selectIsAuthenticated);
 	return (
 		<ThemeProvider>
 			<TooltipProvider>
-				<RouterProvider
-					router={
-						isAuthenticated
-							? authenticatedRouter
-							: unauthenticatedRouter
-					}
-				/>
+				<SerialProvider>
+					<RouterProvider
+						router={isAuthenticated ? authenticatedRouter : unauthenticatedRouter}
+					/>
+				</SerialProvider>
 			</TooltipProvider>
 		</ThemeProvider>
 	);
