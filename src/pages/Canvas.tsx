@@ -182,6 +182,7 @@ export default function Canvas(): JSX.Element {
 	const openDeleteDiagramDialog = useAppSelector(
 		selectOpenDeleteDiagramDialog
 	);
+
 	const generatedCode = useAppSelector(selectCode);
 	const generatedPrediction = useAppSelector(selectPrediction);
 
@@ -221,6 +222,10 @@ export default function Canvas(): JSX.Element {
 	};
 
 	useEffect(() => {
+		document.addEventListener(
+			"pin-click",
+			handleCustomEvent as EventListener
+		);
 		document.addEventListener(
 			"pin-click",
 			handleCustomEvent as EventListener
