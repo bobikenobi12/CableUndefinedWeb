@@ -111,12 +111,23 @@ export function Applayout() {
 	};
 
 	useEffect(() => {
-		console.log("Port State:", portState);
-
 		if (portState === "ready") {
-			// setTimeout(() => {
-			write("sirene\r\n");
-			// }, 2000);
+			resetGraph();
+
+			(diagram?.connections || []).forEach(async connection => {
+				let result = addConnection(connection);
+
+				if (result.connections.length === 0) {
+					toast({
+						title: "Connection Error",
+						description: `No connections found for ${connection[0]} to ${connection[1]}`,
+						variant: "destructive",
+					});
+					return;
+				}
+
+				await write(result.connections.join("\n") + "\n");
+			});
 		}
 	}, [portState]);
 
@@ -154,22 +165,14 @@ export function Applayout() {
 					</Breadcrumb>
 					{match && location.pathname !== "/dashboard/new" && (
 						<Button
-							onClick={() => {
-								if (portState === "open") {
-									disconnect().then(() => {
-										connect().then(success => {
-											if (!success) {
-												toast({
-													title: "Error",
-													description: "Failed to connect to the port",
-													variant: "destructive",
-												});
-												return;
-											}
-										});
-									});
-								} else {
-									connect().then(success => {
+							onClick={async () => {
+								try {
+									if (portState === "open" || portState === "ready") {
+										await disconnect();
+
+										// ! When trying to reconnect to the same port, it fails because disconnect() is not awaited ???
+										const success = await connect();
+
 										if (!success) {
 											toast({
 												title: "Error",
@@ -178,97 +181,26 @@ export function Applayout() {
 											});
 											return;
 										}
+									} else {
+										const success = await connect();
+
+										if (!success) {
+											toast({
+												title: "Error",
+												description: "Failed to connect to the port",
+												variant: "destructive",
+											});
+											return;
+										}
+									}
+								} catch (error) {
+									console.error(error);
+									toast({
+										title: "Error",
+										description: (error as Error).message,
+										variant: "destructive",
 									});
 								}
-
-								// let ports = await listPorts();
-								// console.log(ports);
-								// let port = requestPort("COM4");
-								// requestPort().then(port => {
-								// 	if (port instanceof Error) {
-								// 		return { response: port.message };
-								// 	}
-								// 	try {
-								// 		const writer = port.writable.getWriter();
-								// 		console.log(new TextEncoder().encode("sirene\r\n"));
-								// 		writer.write(new TextEncoder().encode("sirene\r\n"));
-								// 		writer.releaseLock();
-								// resetGraph();
-								// (diagram?.connections || []).forEach(connection => {
-								// 	let result = addConnection(connection);
-								// 	if (result.connections.length === 0) {
-								// 		toast({
-								// 			title: "Connection Error",
-								// 			description: `No connections found for ${connection[0]} to ${connection[1]}`,
-								// 			variant: "destructive",
-								// 		});
-								// 		return;
-								// 	}
-								// 	const writer = getWriter();
-								// 	result.connections.forEach(async connection => {
-								// 		console.log(`Writing to port: ${connection}`);
-								// 		await writer.write(new TextEncoder().encode(connection));
-								// 	});
-								// 	writer.releaseLock();
-								// });
-								// const reader = getReader();
-								// const response = new Promise(async (resolve, reject) => {
-								// if (port.readable) {
-								// 	let message = "";
-								// 	const textDecoder = new TextDecoderStream();
-								// 	const readableStreamClosed = port.readable.pipeTo(
-								// 		textDecoder.writable
-								// 	);
-								// 	let reader = textDecoder.readable.getReader();
-								// 	try {
-								// 		while (true) {
-								// 			const { value, done } = await reader.read();
-								// 			if (done) {
-								// 				break;
-								// 			}
-								// 			message += value;
-								// 		}
-								// 	} catch (error) {
-								// 		console.error(error);
-								// 	} finally {
-								// 		reader.releaseLock();
-								// 	}
-								// 	await readableStreamClosed.catch(() => {}); // Ignore the error
-								// }
-								// try {
-								// 	let response = "";
-								// 	while (true) {
-								// 		console.log("Reading...");
-								// 		const { value, done } = await reader.read();
-								// 		if (done) {
-								// 			break;
-								// 		}
-								// 		response += new TextDecoder().decode(value);
-								// 		console.log({ response });
-								// 	}
-								// 	console.log(response);
-								// 	resolve(response);
-								// } catch (error) {
-								// 	console.error("Error reading from serial port:", error);
-								// 	reject(error);
-								// }
-								// });
-								// response.then((data: any | string) => {
-								// 	console.log("Response:", data);
-								// 	toast({
-								// 		title: "Response",
-								// 		description: data,
-								// 	});
-								// });
-								// } catch (error) {
-								// 	console.log(error);
-								// 	toast({
-								// 		title: "Error",
-								// 		description: (error as Error).message,
-								// 		variant: "destructive",
-								// 	});
-								// }
-								// });
 							}}>
 							Select Port
 						</Button>

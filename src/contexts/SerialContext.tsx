@@ -54,6 +54,7 @@ const SerialProvider = ({
 
 	const portRef = useRef<SerialPort | null>(null);
 	const readerRef = useRef<ReadableStreamDefaultReader | null>(null);
+	const writerRef = useRef<WritableStreamDefaultWriter<Uint8Array> | null>(null);
 	const readerClosedPromiseRef = useRef<Promise<void>>(Promise.resolve());
 
 	const currentSubscriberIdRef = useRef<number>(0);
@@ -90,7 +91,6 @@ const SerialProvider = ({
 			try {
 				while (true) {
 					const { value, done } = await readerRef.current.read();
-					console.log({ value, done });
 
 					if (done) {
 						break;
@@ -179,7 +179,7 @@ const SerialProvider = ({
 	// };
 
 	const manualDisconnectFromPort = async () => {
-		if (canUseSerial && portState === "open") {
+		if (canUseSerial && (portState === "open" || portState === "ready")) {
 			const port = portRef.current;
 			if (port) {
 				setPortState("closing");
@@ -188,6 +188,12 @@ const SerialProvider = ({
 				readerRef.current?.cancel();
 				await readerClosedPromiseRef.current;
 				readerRef.current = null;
+
+				// Cancel any writing to port & release lock
+				writerRef.current?.releaseLock();
+
+				writerRef.current?.abort();
+				writerRef.current = null;
 
 				// Close and nullify the port
 				await port.close();
@@ -207,32 +213,39 @@ const SerialProvider = ({
 	const onPortDisconnect = async () => {
 		// Wait for the reader to finish it's current loop
 		await readerClosedPromiseRef.current;
+
 		// Update state
 		readerRef.current = null;
 		readerClosedPromiseRef.current = Promise.resolve();
+
+		writerRef.current?.abort();
+		writerRef.current = null;
+
 		portRef.current = null;
+
 		setHasTriedAutoconnect(false);
 		setPortState("closed");
 	};
 
 	const write = async (data: string) => {
 		try {
-			console.log("Writing to port:", data);
-
 			if (portState !== "ready") {
-				console.log({ portState });
 				return;
 			}
 
-			const writer = portRef.current?.writable?.getWriter();
+			if (!writerRef.current) {
+				const newWriter = portRef.current?.writable?.getWriter();
 
-			console.log(writer);
+				if (!newWriter) {
+					return;
+				}
 
-			if (writer) {
-				await writer.write(new TextEncoder().encode(data));
-
-				writer.releaseLock();
+				writerRef.current = newWriter;
 			}
+
+			await writerRef.current.write(new TextEncoder().encode(data));
+
+			// writerRef.current.releaseLock();
 		} catch (error) {
 			console.error("Error writing to port:", error);
 		}
