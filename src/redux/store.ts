@@ -2,17 +2,15 @@ import { configureStore, combineReducers } from "@reduxjs/toolkit";
 
 import { apiSlice } from "./api/api-slice";
 
-import diagramsSlice from "./features/diagrams/diagrams-slice";
-import { wokwiSlice } from "./features/diagrams/wokwi-elements-slice";
+import { diagramsSlice } from "./features/diagrams/diagrams-slice";
 import { authHandlerSlice } from "./features/auth/auth-handler-slice";
-import predictionsSlice from "./features/predictions/predictions-slice";
+import { predictionsSlice } from "./features/predictions/predictions-slice";
 
 const AppReducer = combineReducers({
 	[apiSlice.reducerPath]: apiSlice.reducer,
 	auth: authHandlerSlice.reducer,
-	wokwi: wokwiSlice.reducer,
-	diagrams: diagramsSlice,
-	predictions: predictionsSlice,
+	diagrams: diagramsSlice.reducer,
+	predictions: predictionsSlice.reducer,
 });
 
 export const rootReducer = (state: any, action: any) => {
