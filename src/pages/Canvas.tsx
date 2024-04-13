@@ -77,11 +77,8 @@ import { Combine, CodeXml, Component, Settings } from "lucide-react";
 
 import { useTheme } from "@/hooks/useTheme";
 
+import { ReactFlow, MiniMap, Controls } from "reactflow";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import {
-	toggleGrid,
-	getShowGrid,
-} from "@/redux/features/diagrams/wokwi-elements-slice";
 
 import {
 	useDeleteDiagramMutation,
@@ -116,8 +113,6 @@ import {
 } from "@/redux/features/predictions/predictions-slice";
 import { PredictionForm } from "@/components/canvas/prediction-form";
 
-import { RenameElementForm } from "@/components/canvas/element-context.menu";
-
 import {
 	partMappings,
 	partTagsToConnectionStrings,
@@ -125,7 +120,6 @@ import {
 
 import { useParams } from "react-router-dom";
 
-import DiagramPart from "@/components/canvas/diagram-part";
 import { Pin } from "@/types/connections";
 import { Button } from "@/components/ui/button";
 import { Microcontroller } from "@/types/diagrams";
@@ -137,6 +131,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 
 import { CopyBlock, atomOneDark, atomOneLight } from "react-code-blocks";
+
+import CanvasFlow from "@/components/canvas/canvas-flow";
 
 const updateDiagramSchema = z.object({
 	name: z.string().nonempty(),
@@ -180,7 +176,6 @@ export default function Canvas(): JSX.Element {
 	const diagram = useAppSelector((state) =>
 		selectDiagramById(state, id as string)
 	);
-	const showGrid = useAppSelector(getShowGrid);
 	const tab = useAppSelector(selectTab);
 	const openDeleteDiagramDialog = useAppSelector(
 		selectOpenDeleteDiagramDialog
@@ -846,101 +841,7 @@ export default function Canvas(): JSX.Element {
 						</ResizablePanel>
 						<ResizableHandle />
 						<ResizablePanel>
-							<div
-								className={`flex-1 relative ${
-									showGrid ? "scene-grid" : ""
-								}`}
-								// id="canvas"
-							>
-								{/* <ContextMenu>
-					<ContextMenuTrigger> */}
-								{diagram &&
-									diagram.parts.map((part, idx) => (
-										// <KeepScale>
-										<div key={idx}>
-											<Dialog>
-												<ContextMenu>
-													<ContextMenuTrigger>
-														<DiagramPart
-															part={part}
-														/>
-													</ContextMenuTrigger>
-													<ContextMenuContent className="w-48">
-														<ContextMenuItem>
-															<DialogTrigger
-																asChild
-															>
-																<ContextMenuItem>
-																	Rename
-																</ContextMenuItem>
-															</DialogTrigger>
-														</ContextMenuItem>
-														<ContextMenuItem>
-															Move up
-														</ContextMenuItem>
-														<ContextMenuItem>
-															Rotate
-														</ContextMenuItem>
-														<ContextMenuItem
-															onClick={() => {
-																try {
-																	removePart({
-																		_id: id as string,
-																		partId: part.id,
-																	});
-																	toast({
-																		title: "Element removed",
-																		description: `Removed ${part.name} from canvas`,
-																	});
-																} catch (error) {
-																	toast({
-																		variant:
-																			"destructive",
-																		title: "Failed to remove element",
-																		description:
-																			error as string,
-																	});
-																}
-															}}
-															className="hover:text-red-500 cursor-pointer"
-														>
-															Remove
-														</ContextMenuItem>
-													</ContextMenuContent>
-												</ContextMenu>
-												<DialogContent className="sm:max-w-md">
-													<DialogHeader>
-														<DialogTitle>
-															Rename Element
-														</DialogTitle>
-														<DialogDescription>
-															Enter a new name for
-															the element
-														</DialogDescription>
-													</DialogHeader>
-													<RenameElementForm
-														part={part}
-														initialName={part.name}
-													/>
-												</DialogContent>
-											</Dialog>
-										</div>
-
-										// </KeepScale>
-									))}
-								{/* </ContextMenuTrigger>
-					<ContextMenuContent>
-						<ContextMenuCheckboxItem
-							checked={showGrid}
-							onCheckedChange={() => dispatch(toggleGrid())}
-						>
-							<div className="flex items-center space-x-2">
-								Show Grid <div className="RightSlot">⌘+'</div>
-							</div>
-						</ContextMenuCheckboxItem>
-					</ContextMenuContent>
-				</ContextMenu> */}
-							</div>
+							{diagram && <CanvasFlow diagram={diagram} />}
 						</ResizablePanel>
 					</ResizablePanelGroup>
 				)}
