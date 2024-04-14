@@ -40,11 +40,11 @@ export const partsApiSlice = apiSlice.injectEndpoints({
 		}),
 		updatePart: build.mutation<
 			{ diagram: Diagram },
-			{ diagramId: string; partId: string; update: Partial<Part> }
+			{ diagramId: string; partId: string; update: AddPart }
 		>({
 			queryFn: ({ diagramId, partId, update }) => {
 				const socket = getSocket(SocketNamespace.DIAGRAMS);
-				// console.log(part, "part", _id, "_id");
+				console.log(update, "part", diagramId, "_id");
 				socket.emit(SocketEvent.UPDATE_PART, {
 					token: localStorage.getItem("_token"),
 					diagram: {

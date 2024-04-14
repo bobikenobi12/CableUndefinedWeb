@@ -152,7 +152,6 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 
 	const onNodesChange = useCallback(
 		(changes: NodeChange[]) => {
-			// console.log(changes);
 			setNodes((nodes) => applyNodeChanges<Part>(changes, nodes));
 		},
 		[setNodes]
@@ -164,46 +163,26 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 
 	useEffect(() => {
 		if (diagram) {
-			console.log(
+			console.log(diagram);
+			setNodes(
 				diagram.parts.map(
-					(part) => ({
-						id: part.id,
-						type: "partUpdater",
-						data: {
-							label: part.name,
-							...part,
-						},
-						position: {
-							x: part.x,
-							y: part.y,
-						},
-					}),
-					"mapped parts"
+					(part) =>
+						({
+							id: part.id,
+							type: "partUpdater",
+							data: {
+								label: part.name,
+								...part,
+							},
+							position: {
+								x: part.x,
+								y: part.y,
+							},
+						} as ReactFlowNode)
 				)
 			);
-			setNodes(
-				diagram.parts.map((part) => ({
-					id: part.id,
-					type: "partUpdater",
-					data: {
-						label: part.name,
-						...part,
-					},
-					position: {
-						x: 0,
-						y: 0,
-					},
-					draggable: part.locked ? false : true,
-
-					// positionAbsolute: {
-					// 	x: part.x,
-					// 	y: part.y,
-					// },
-					// zIndex: 10,
-				}))
-			);
 		}
-	}, [diagram]);
+	}, [diagram, setNodes]);
 
 	return (
 		<div className="flex-1 relative h-full">
@@ -221,10 +200,13 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 					try {
 						updatePart({
 							diagramId: diagram._id,
-							partId: node.id,
+							partId: node.data.id,
 							update: {
 								x: node.position.x,
 								y: node.position.y,
+								angle: node.data.angle,
+								locked: node.data.locked,
+								name: node.data.name,
 							},
 						})
 							.unwrap()

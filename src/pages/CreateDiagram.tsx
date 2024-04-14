@@ -75,7 +75,7 @@ export default function CreateDiagram() {
 					const diagramId = res._id;
 					// add 2 breadboards and 1 microcontroller to the diagram
 					addPart({
-						_id: diagramId,
+						diagramId,
 						part: {
 							x: 150,
 							y: 250,
@@ -84,9 +84,8 @@ export default function CreateDiagram() {
 							angle: 90,
 						},
 					});
-
 					addPart({
-						_id: diagramId,
+						diagramId,
 						part: {
 							x: 300,
 							y: 250,
@@ -96,7 +95,7 @@ export default function CreateDiagram() {
 						},
 					});
 					addPart({
-						_id: diagramId,
+						diagramId,
 						part: {
 							x: 150,
 							y: 150,

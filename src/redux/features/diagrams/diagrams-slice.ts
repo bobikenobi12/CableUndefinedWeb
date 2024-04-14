@@ -76,26 +76,27 @@ export const diagramsSlice = createSlice({
 				localStorage.removeItem("indexTable");
 			}
 		);
-		builder.addMatcher(
-			partsApiSlice.endpoints.addPart.matchFulfilled,
-			(state, action: { payload: { diagram: Diagram } }) => {
-				const { diagram } = action.payload;
-				state.partsByDiagramId[diagram._id] = diagram.parts;
-				state.diagrams = state.diagrams.map((d) =>
-					d._id === diagram._id ? diagram : d
-				);
-			}
-		);
-		builder.addMatcher(
-			partsApiSlice.endpoints.updatePart.matchFulfilled,
-			(state, action: { payload: { diagram: Diagram } }) => {
-				const { diagram } = action.payload;
-				state.partsByDiagramId[diagram._id] = diagram.parts;
-				state.diagrams = state.diagrams.map((d) =>
-					d._id === diagram._id ? diagram : d
-				);
-			}
-		);
+		// builder.addMatcher(
+		// 	partsApiSlice.endpoints.addPart.matchFulfilled,
+		// 	(state, action: { payload: { diagram: Diagram } }) => {
+		// 		const { diagram } = action.payload;
+		// 		state.partsByDiagramId[diagram._id] = diagram.parts;
+		// 		state.diagrams = state.diagrams.map((d) =>
+		// 			d._id === diagram._id ? diagram : d
+		// 		);
+		// 	}
+		// );
+		// builder.addMatcher(
+		// 	partsApiSlice.endpoints.updatePart.matchFulfilled,
+		// 	(state, action: { payload: { diagram: Diagram } }) => {
+		// 		const { diagram } = action.payload;
+		// 		console.log(diagram);
+		// 		state.partsByDiagramId[diagram._id] = diagram.parts;
+		// 		state.diagrams = state.diagrams.map((d) =>
+		// 			d._id === diagram._id ? diagram : d
+		// 		);
+		// 	}
+		// );
 		builder.addMatcher(
 			partsApiSlice.endpoints.removePart.matchFulfilled,
 			(state, action: { payload: { diagram: Diagram } }) => {
