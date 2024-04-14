@@ -94,7 +94,7 @@ export default function DiagramPart({
 			<div className="flex items-center space-x-2">
 				{part.name} + gdagdaga
 			</div>
-			<LitElementWrapper element={part} />
+			<LitElementWrapper part={part} />
 		</div>
 	);
 }

@@ -192,6 +192,7 @@ export default function Canvas(): JSX.Element {
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 	const handleCustomEvent = (event: CustomEvent) => {
+		console.log(event);
 		const { pin } = event.detail;
 		const { elementName, pinName, x, y } = pin;
 		const type = partTagsToConnectionStrings[pinName];
@@ -685,12 +686,13 @@ export default function Canvas(): JSX.Element {
 													onClick={() => {
 														try {
 															addPart({
-																_id: id as string,
+																diagramId:
+																	id as string,
 																part: {
 																	name,
 																	angle: 0,
-																	x: 0,
-																	y: 0,
+																	x: 24.513531513513513,
+																	y: 24.513531513513513,
 																	locked: false,
 																},
 															})

@@ -35,18 +35,19 @@ function getSocket(namespace: SocketNamespace = SocketNamespace.DIAGRAMS) {
 	socket.on("connect", () => {
 		console.log("socket connected");
 	});
-	socket.on("error", (error: ServerErrors) => {
-		switch (error) {
-			case ServerErrors.INVALID_TOKEN:
-				console.error("Invalid token");
-				break;
-			case ServerErrors.UNAUTHORIZED:
-				console.error("Unauthorized");
-				break;
-			default:
-				console.error("Unknown error", error);
-				break;
-		}
+	socket.on("error", (error) => {
+		// switch (error) {
+		// 	case ServerErrors.INVALID_TOKEN:
+		// 		console.error("Invalid token");
+		// 		break;
+		// 	case ServerErrors.UNAUTHORIZED:
+		// 		console.error("Unauthorized");
+		// 		break;
+		// 	default:
+		// 		console.error("Unknown error", error);
+		// 		break;
+		// }
+		console.error("Error", error);
 	});
 	return socket;
 }
