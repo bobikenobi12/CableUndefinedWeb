@@ -19,6 +19,7 @@ export const diagramsApiSlice = apiSlice.injectEndpoints({
 						if ("error" in data) {
 							reject(data.error);
 						} else {
+							console.log(data.diagrams);
 							resolve({
 								data: data.diagrams,
 							});
@@ -27,7 +28,15 @@ export const diagramsApiSlice = apiSlice.injectEndpoints({
 				});
 			},
 			providesTags: (result) =>
-				result ? [{ type: "Diagrams", id: "LIST" }] : [],
+				result
+					? [
+							...result.map(({ _id }) => ({
+								type: "Diagrams" as const,
+								_id,
+							})),
+							{ type: "Diagrams", id: "LIST" },
+					  ]
+					: [{ type: "Diagrams", id: "LIST" }],
 		}),
 		createDiagram: build.mutation<
 			Diagram,
@@ -46,6 +55,7 @@ export const diagramsApiSlice = apiSlice.injectEndpoints({
 						if ("error" in data) {
 							reject(data.error);
 						} else {
+							console.log(data.diagram);
 							resolve({
 								data: data.diagram,
 							});
@@ -91,7 +101,7 @@ export const diagramsApiSlice = apiSlice.injectEndpoints({
 			},
 			invalidatesTags: (result) =>
 				result
-					? [{ type: "Diagrams", id: "LIST" }]
+					? [{ type: "Diagrams", id: result._id }]
 					: [{ type: "Diagrams", id: "LIST" }],
 		}),
 		deleteDiagram: build.mutation({
@@ -117,7 +127,10 @@ export const diagramsApiSlice = apiSlice.injectEndpoints({
 					});
 				});
 			},
-			invalidatesTags: [{ type: "Diagrams", id: "LIST" }],
+			invalidatesTags: (result) =>
+				result
+					? [{ type: "Diagrams", id: result._id }]
+					: [{ type: "Diagrams", id: "LIST" }],
 		}),
 	}),
 });

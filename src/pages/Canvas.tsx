@@ -40,6 +40,8 @@ import {
 	ContextMenuItem,
 	ContextMenuContent,
 	ContextMenuTrigger,
+	ContextMenuLabel,
+	ContextMenuSeparator,
 } from "@/components/ui/context-menu";
 
 import {
@@ -77,11 +79,8 @@ import { Combine, CodeXml, Component, Settings } from "lucide-react";
 
 import { useTheme } from "@/hooks/useTheme";
 
+import { ReactFlow, MiniMap, Controls } from "reactflow";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import {
-	toggleGrid,
-	getShowGrid,
-} from "@/redux/features/diagrams/wokwi-elements-slice";
 
 import {
 	useDeleteDiagramMutation,
@@ -116,8 +115,6 @@ import {
 } from "@/redux/features/predictions/predictions-slice";
 import { PredictionForm } from "@/components/canvas/prediction-form";
 
-import { RenameElementForm } from "@/components/canvas/element-context.menu";
-
 import {
 	partMappings,
 	partTagsToConnectionStrings,
@@ -125,7 +122,6 @@ import {
 
 import { useParams } from "react-router-dom";
 
-import DiagramPart from "@/components/canvas/diagram-part";
 import { Pin } from "@/types/connections";
 import { Button } from "@/components/ui/button";
 import { Microcontroller } from "@/types/diagrams";
@@ -137,6 +133,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 
 import { CopyBlock, atomOneDark, atomOneLight } from "react-code-blocks";
+
+import CanvasFlow from "@/components/canvas/canvas-flow";
 
 const updateDiagramSchema = z.object({
 	name: z.string().nonempty(),
@@ -180,11 +178,11 @@ export default function Canvas(): JSX.Element {
 	const diagram = useAppSelector((state) =>
 		selectDiagramById(state, id as string)
 	);
-	const showGrid = useAppSelector(getShowGrid);
 	const tab = useAppSelector(selectTab);
 	const openDeleteDiagramDialog = useAppSelector(
 		selectOpenDeleteDiagramDialog
 	);
+
 	const generatedCode = useAppSelector(selectCode);
 	const generatedPrediction = useAppSelector(selectPrediction);
 
@@ -197,6 +195,7 @@ export default function Canvas(): JSX.Element {
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 	const handleCustomEvent = (event: CustomEvent) => {
+		console.log(event);
 		const { pin } = event.detail;
 		const { elementName, pinName, x, y } = pin;
 		const type = partTagsToConnectionStrings[pinName];
@@ -223,6 +222,10 @@ export default function Canvas(): JSX.Element {
 	};
 
 	useEffect(() => {
+		document.addEventListener(
+			"pin-click",
+			handleCustomEvent as EventListener
+		);
 		document.addEventListener(
 			"pin-click",
 			handleCustomEvent as EventListener
@@ -278,7 +281,7 @@ export default function Canvas(): JSX.Element {
 	function removePartHandler(partId: string) {
 		try {
 			removePart({
-				_id: id as string,
+				diagramId: id as string,
 				partId,
 			});
 			toast({
@@ -322,6 +325,17 @@ export default function Canvas(): JSX.Element {
 			});
 		}
 	};
+
+	const themeOptions = {
+		dark: atomOneDark,
+		light: atomOneLight,
+		system: window.matchMedia("(prefers-color-scheme: dark)").matches
+			? atomOneDark
+			: atomOneLight,
+	};
+
+	// @ts-ignore
+	const themeOption = themeOptions[theme];
 
 	return (
 		<div className="flex flex-1">
@@ -627,25 +641,35 @@ export default function Canvas(): JSX.Element {
 												<AlertDialogAction className="px-0">
 													<Button
 														variant="destructive"
+														disabled={
+															isLoadingDeleteDiagram
+														}
 														onClick={() => {
 															try {
 																deleteDiagram(
 																	id as string
-																).unwrap();
-																dispatch(
-																	setOpenDeleteDiagramDialog(
-																		{
-																			open: false,
+																)
+																	.unwrap()
+																	.then(
+																		() => {
+																			dispatch(
+																				setOpenDeleteDiagramDialog(
+																					{
+																						open: false,
+																					}
+																				)
+																			);
+																			navigate(
+																				"/dashboard"
+																			);
+																			toast(
+																				{
+																					title: "Diagram deleted",
+																					description: `Deleted diagram with id ${id}`,
+																				}
+																			);
 																		}
-																	)
-																);
-																navigate(
-																	"/dashboard"
-																);
-																toast({
-																	title: "Diagram deleted",
-																	description: `Deleted diagram with id ${id}`,
-																});
+																	);
 															} catch (error) {
 																toast({
 																	variant:
@@ -657,6 +681,9 @@ export default function Canvas(): JSX.Element {
 															}
 														}}
 													>
+														{isLoadingDeleteDiagram && (
+															<Icons.spinner className="h-5 w-5 animate-spin mr-2" />
+														)}
 														Delete Diagram
 													</Button>
 												</AlertDialogAction>
@@ -690,12 +717,13 @@ export default function Canvas(): JSX.Element {
 													onClick={() => {
 														try {
 															addPart({
-																_id: id as string,
+																diagramId:
+																	id as string,
 																part: {
 																	name,
 																	angle: 0,
-																	x: 0,
-																	y: 0,
+																	x: 24.513531513513513,
+																	y: 24.513531513513513,
 																	locked: false,
 																},
 															})
@@ -767,7 +795,7 @@ export default function Canvas(): JSX.Element {
 										// 		2
 										// 	)}
 										// </code>
-										<div className="flex flex-1 flex-col items-center w-full overflow-y-scroll px-2 py-3 rounded-md bg-slate-950 dark:bg-gray-800">
+										<div className="flex flex-1 flex-col items-center w-full overflow-y-scroll px-2 py-3 rounded-md bg-gray-100 dark:bg-gray-800">
 											<span className="text-sm text-muted-foreground mb-3">
 												{generatedCode.beforeText}
 											</span>
@@ -777,11 +805,7 @@ export default function Canvas(): JSX.Element {
 												}
 												text={generatedCode.code}
 												showLineNumbers={false}
-												theme={
-													theme === "dark"
-														? atomOneDark
-														: atomOneLight
-												}
+												theme={themeOption}
 												wrapLongLines
 												codeBlock
 											/>
@@ -846,101 +870,7 @@ export default function Canvas(): JSX.Element {
 						</ResizablePanel>
 						<ResizableHandle />
 						<ResizablePanel>
-							<div
-								className={`flex-1 relative ${
-									showGrid ? "scene-grid" : ""
-								}`}
-								// id="canvas"
-							>
-								{/* <ContextMenu>
-					<ContextMenuTrigger> */}
-								{diagram &&
-									diagram.parts.map((part, idx) => (
-										// <KeepScale>
-										<div key={idx}>
-											<Dialog>
-												<ContextMenu>
-													<ContextMenuTrigger>
-														<DiagramPart
-															part={part}
-														/>
-													</ContextMenuTrigger>
-													<ContextMenuContent className="w-48">
-														<ContextMenuItem>
-															<DialogTrigger
-																asChild
-															>
-																<ContextMenuItem>
-																	Rename
-																</ContextMenuItem>
-															</DialogTrigger>
-														</ContextMenuItem>
-														<ContextMenuItem>
-															Move up
-														</ContextMenuItem>
-														<ContextMenuItem>
-															Rotate
-														</ContextMenuItem>
-														<ContextMenuItem
-															onClick={() => {
-																try {
-																	removePart({
-																		_id: id as string,
-																		partId: part.id,
-																	});
-																	toast({
-																		title: "Element removed",
-																		description: `Removed ${part.name} from canvas`,
-																	});
-																} catch (error) {
-																	toast({
-																		variant:
-																			"destructive",
-																		title: "Failed to remove element",
-																		description:
-																			error as string,
-																	});
-																}
-															}}
-															className="hover:text-red-500 cursor-pointer"
-														>
-															Remove
-														</ContextMenuItem>
-													</ContextMenuContent>
-												</ContextMenu>
-												<DialogContent className="sm:max-w-md">
-													<DialogHeader>
-														<DialogTitle>
-															Rename Element
-														</DialogTitle>
-														<DialogDescription>
-															Enter a new name for
-															the element
-														</DialogDescription>
-													</DialogHeader>
-													<RenameElementForm
-														part={part}
-														initialName={part.name}
-													/>
-												</DialogContent>
-											</Dialog>
-										</div>
-
-										// </KeepScale>
-									))}
-								{/* </ContextMenuTrigger>
-					<ContextMenuContent>
-						<ContextMenuCheckboxItem
-							checked={showGrid}
-							onCheckedChange={() => dispatch(toggleGrid())}
-						>
-							<div className="flex items-center space-x-2">
-								Show Grid <div className="RightSlot">⌘+'</div>
-							</div>
-						</ContextMenuCheckboxItem>
-					</ContextMenuContent>
-				</ContextMenu> */}
-							</div>
+							{diagram && <CanvasFlow diagram={diagram} />}
 						</ResizablePanel>
 					</ResizablePanelGroup>
 				)}
