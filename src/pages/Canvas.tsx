@@ -139,7 +139,7 @@ import { useSerial } from "@/contexts/SerialContext";
 import { addConnection } from "@/utils/pathfinding";
 
 const updateDiagramSchema = z.object({
-	name: z.string().nonempty(),
+	name: z.string().min(1),
 	microcontroller: z.enum([
 		Microcontroller.ATTiny85,
 		Microcontroller.ArduinoNano,
@@ -608,7 +608,7 @@ export default function Canvas(): JSX.Element {
 					<ResizablePanelGroup
 						direction="horizontal"
 						className="h-full">
-						<ResizablePanel defaultSize={40}>
+						<ResizablePanel defaultSize={20}>
 							{tab === Tab.PARTS ? (
 								<div className="flex flex-col w-fit-content p-2 space-y-2 h-full">
 									<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
