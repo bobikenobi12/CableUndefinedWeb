@@ -224,7 +224,7 @@ export default function Canvas(): JSX.Element {
 
 	useEffect(() => {
 		document.addEventListener("pin-click", handleCustomEvent as EventListener);
-		document.addEventListener("pin-click", handleCustomEvent as EventListener);
+		// document.addEventListener("pin-click", handleCustomEvent as EventListener);
 
 		return () => {
 			document.removeEventListener(
@@ -628,8 +628,8 @@ export default function Canvas(): JSX.Element {
 															part: {
 																name,
 																angle: 0,
-																x: 24.513531513513513,
-																y: 24.513531513513513,
+																x: 0,
+																y: 0,
 																locked: false,
 															},
 														})
