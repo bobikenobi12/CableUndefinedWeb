@@ -32,13 +32,13 @@ export const authHandlerSlice = createSlice({
 		setOpenUpdateProfile: (state, action) => {
 			state.openUpdateProfile = action.payload;
 		},
-		logout: (state) => {
+		logout: state => {
 			state = authState;
 			localStorage.removeItem("_token");
 			localStorage.removeItem("user");
 		},
 	},
-	extraReducers: (builder) => {
+	extraReducers: builder => {
 		builder.addMatcher(
 			authApiSlice.endpoints.login.matchFulfilled,
 			(state, action) => {
@@ -47,14 +47,16 @@ export const authHandlerSlice = createSlice({
 				localStorage.setItem("user", JSON.stringify(action.payload));
 			}
 		);
-		builder.addMatcher(
-			authApiSlice.endpoints.logout.matchFulfilled,
-			(state) => {
-				state = authState;
-				localStorage.removeItem("_token");
-				localStorage.removeItem("user");
-			}
-		);
+		builder.addMatcher(authApiSlice.endpoints.logout.matchFulfilled, state => {
+			localStorage.removeItem("_token");
+			localStorage.removeItem("user");
+			state = authState;
+		});
+		builder.addMatcher(authApiSlice.endpoints.logout.matchRejected, state => {
+			localStorage.removeItem("_token");
+			localStorage.removeItem("user");
+			state = authState;
+		});
 	},
 });
 

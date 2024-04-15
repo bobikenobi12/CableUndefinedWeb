@@ -190,9 +190,8 @@ const SerialProvider = ({
 				readerRef.current = null;
 
 				// Cancel any writing to port & release lock
+				await writerRef.current?.abort();
 				writerRef.current?.releaseLock();
-
-				writerRef.current?.abort();
 				writerRef.current = null;
 
 				// Close and nullify the port

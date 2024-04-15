@@ -64,14 +64,14 @@ export default function CreateDiagram() {
 		},
 	});
 
-	const handleSubmit = form.handleSubmit((data) => {
+	const handleSubmit = form.handleSubmit(data => {
 		try {
 			createDiagram({
 				name: data.name,
 				microcontroller: data.microcontroller,
 			})
 				.unwrap()
-				.then((res) => {
+				.then(res => {
 					toast({
 						title: "Success",
 						description: "Diagram created successfully.",
@@ -101,9 +101,7 @@ export default function CreateDiagram() {
 									name="name"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>
-												Diagram Name *
-											</FormLabel>
+											<FormLabel>Diagram Name *</FormLabel>
 											<FormControl>
 												<Input {...field} />
 											</FormControl>
@@ -116,49 +114,26 @@ export default function CreateDiagram() {
 									name="microcontroller"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel>
-												Microcontroller *
-											</FormLabel>
+											<FormLabel>Microcontroller *</FormLabel>
 											<Select
 												{...field}
-												onValueChange={field.onChange}
-											>
+												onValueChange={field.onChange}>
 												<SelectTrigger>
 													<SelectValue placeholder="Select a microcontroller" />
 												</SelectTrigger>
 												<SelectContent>
 													<SelectGroup>
-														<SelectLabel>
-															Microcontrollers
-														</SelectLabel>
-														<SelectItem
-															value={
-																Microcontroller.ATTiny85
-															}
-														>
+														<SelectLabel>Microcontrollers</SelectLabel>
+														<SelectItem value={Microcontroller.ATTiny85}>
 															ATTiny85 (Default)
 														</SelectItem>
-														<SelectItem
-															value={
-																Microcontroller.ArduinoNano
-															}
-														>
+														<SelectItem value={Microcontroller.ArduinoNano}>
 															Arduino Nano
 														</SelectItem>
-														<SelectItem
-															value={
-																Microcontroller.RasberryPiPico
-															}
-														>
+														<SelectItem value={Microcontroller.RasberryPiPico}>
 															Rasberry Pi Pico
 														</SelectItem>
-														<SelectItem
-															value={
-																Microcontroller.ESP32
-															}
-														>
-															ESP32
-														</SelectItem>
+														<SelectItem value={Microcontroller.ESP32}>ESP32</SelectItem>
 													</SelectGroup>
 												</SelectContent>
 											</Select>
@@ -173,15 +148,13 @@ export default function CreateDiagram() {
 			<CardFooter className="flex justify-between">
 				<Button
 					variant="outline"
-					onClick={() => navigate("/dashboard")}
-				>
+					onClick={() => navigate("/dashboard")}>
 					Cancel
 				</Button>
 				<Button
 					disabled={isLoading}
 					onClick={handleSubmit}
-					type="submit"
-				>
+					type="submit">
 					Create
 				</Button>
 			</CardFooter>

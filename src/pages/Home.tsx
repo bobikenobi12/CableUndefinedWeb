@@ -12,8 +12,7 @@ export default function Home(): JSX.Element {
 			<div className="absolute left-0 top-0 -z-10 h-full w-full overflow-hidden">
 				<div
 					className="pointer-events-none absolute inset-x-0 transform-gpu overflow-hidden blur-3xl sm:-top-80"
-					aria-hidden="true"
-				>
+					aria-hidden="true">
 					<div
 						className="relative left-[calc(50%)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-orange-400 to-primary-muted opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
 						style={{
@@ -24,8 +23,7 @@ export default function Home(): JSX.Element {
 				</div>
 				<div
 					className="pointer-events-none absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]"
-					aria-hidden="true"
-				>
+					aria-hidden="true">
 					<div
 						className="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-red-300 to-orange-800 opacity-30 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]"
 						style={{
@@ -38,8 +36,7 @@ export default function Home(): JSX.Element {
 			<header className="sticky top-0 z-50 w-full bg-gradient-to-b from-white via-white/60 via-70% dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
 				<nav
 					className="mx-auto flex max-w-7xl items-center justify-between gap-x-6 p-6 lg:px-8"
-					aria-label="Global"
-				>
+					aria-label="Global">
 					<div className="flex lg:flex-1">
 						<Link to="/">
 							<CableUndefined />
@@ -66,8 +63,7 @@ export default function Home(): JSX.Element {
 					<div className="hidden flex-1 items-center justify-end gap-x-6 md:flex">
 						<Button
 							className="hidden lg:flex"
-							variant={"secondary"}
-						>
+							variant={"secondary"}>
 							<Link to="/login">Log in</Link>
 						</Button>
 					</div>
@@ -83,14 +79,11 @@ export default function Home(): JSX.Element {
 									<Link
 										className="font-semibold text-primary"
 										to="https://github.com/Pupe6"
-										target="_blank"
-									>
+										target="_blank">
 										<span
 											className="absolute inset-0"
-											aria-hidden="true"
-										></span>
-										More info{" "}
-										<span aria-hidden="true">→</span>
+											aria-hidden="true"></span>
+										More info <span aria-hidden="true">→</span>
 									</Link>
 								</div>
 							</div>
@@ -101,20 +94,20 @@ export default function Home(): JSX.Element {
 									without the wires
 								</h1>
 								<p className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-300">
-									Embedded programming is better than ever.
-									Cable connections need catching up.
+									Embedded programming is better than ever. Cable connections need
+									catching up.
 								</p>
 								<div className="mt-10 flex items-center justify-center gap-x-6">
 									<Button variant={"secondary"}>
 										<Link to="/login">Get started</Link>
 									</Button>
-									<Link
+									{/* <Link
 										className="text-sm font-semibold leading-6 text-gray-900 dark:text-gray-100"
 										to="/docs"
 									>
 										Learn more{" "}
 										<span aria-hidden="true">→</span>
-									</Link>
+									</Link> */}
 								</div>
 							</div>
 						</div>

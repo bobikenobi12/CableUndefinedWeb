@@ -90,11 +90,8 @@ export default function DiagramPart({
 				position: "absolute",
 				transition: "transform 150ms ease",
 			}}
-			className="flex flex-col items-center space-y-2 p-2 rounded-md w-1/6"
-		>
-			<div className="flex items-center space-x-2">
-				{part.name} + gdagdaga
-			</div>
+			className="flex flex-col items-center space-y-2 p-2 rounded-md w-1/6">
+			<div className="flex items-center space-x-2">{part.name} + gdagdaga</div>
 			<LitElementWrapper part={part} />
 		</div>
 	);

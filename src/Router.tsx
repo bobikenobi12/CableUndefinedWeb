@@ -2,65 +2,57 @@ import { createBrowserRouter } from "react-router-dom";
 
 import { Applayout } from "./components/layouts/AppLayout";
 
-// Layouts
-import { LoggedInLayout } from "./components/layouts/LoggedInLayout";
-
 // Pages
 import NoMatch from "./pages/NoMatch";
 import Dashboard from "./pages/Dashboard";
-import Sample from "./pages/Sample";
 import LoginPage from "./pages/Login";
 import RegisterPage from "./pages/Register";
 import CreateDiagram from "./pages/CreateDiagram";
 import Canvas from "./pages/Canvas";
 import Home from "./pages/Home";
+import RouterGuard from "./components/router-guard";
 
-export const unauthenticatedRouter = createBrowserRouter(
+export const router = createBrowserRouter(
 	[
 		{
 			path: "",
-			element: <Home />,
-		},
-		{
-			path: "login",
-			element: <LoginPage />,
-		},
-		{
-			path: "register",
-			element: <RegisterPage />,
-		},
-		{
-			path: "*",
-			element: <NoMatch />,
-		},
-	],
-	{
-		// basename: global.basename,
-	}
-);
-
-export const authenticatedRouter = createBrowserRouter(
-	[
-		{
-			path: "",
-			element: <Applayout />,
+			element: <RouterGuard shouldBe="unauthenticated" />,
 			children: [
 				{
-					path: "dashboard",
-					element: <Dashboard />,
+					path: "",
+					element: <Home />,
 				},
 				{
-					path: "dashboard/new",
-					element: <CreateDiagram />,
+					path: "login",
+					element: <LoginPage />,
 				},
 				{
-					path: "dashboard/:id",
-					element: <Canvas />,
+					path: "register",
+					element: <RegisterPage />,
 				},
-
+			],
+		},
+		{
+			path: "",
+			element: <RouterGuard shouldBe="authenticated" />,
+			children: [
 				{
-					path: "sample",
-					element: <Sample />,
+					path: "",
+					element: <Applayout />,
+					children: [
+						{
+							path: "dashboard",
+							element: <Dashboard />,
+						},
+						{
+							path: "dashboard/new",
+							element: <CreateDiagram />,
+						},
+						{
+							path: "dashboard/:id",
+							element: <Canvas />,
+						},
+					],
 				},
 			],
 		},
@@ -73,3 +65,33 @@ export const authenticatedRouter = createBrowserRouter(
 		// basename: global.basename,
 	}
 );
+
+// export const authenticatedRouter = createBrowserRouter(
+// 	[
+// 		{
+// 			path: "",
+// 			element: <Applayout />,
+// 			children: [
+// 				{
+// 					path: "dashboard",
+// 					element: <Dashboard />,
+// 				},
+// 				{
+// 					path: "dashboard/new",
+// 					element: <CreateDiagram />,
+// 				},
+// 				{
+// 					path: "dashboard/:id",
+// 					element: <Canvas />,
+// 				},
+// 			],
+// 		},
+// 		{
+// 			path: "*",
+// 			element: <NoMatch />,
+// 		},
+// 	],
+// 	{
+// 		// basename: global.basename,
+// 	}
+// );
