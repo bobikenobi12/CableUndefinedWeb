@@ -22,24 +22,19 @@ export default function Dashboard() {
 				<PageHeaderHeading>Your Diagrams</PageHeaderHeading>
 				<Button onClick={() => navigate("/dashboard/new")}>
 					<Plus />
-					<span className="blockmd:hiddenlg:blockml-2">
-						Create New Diagram
-					</span>
+					<span className="blockmd:hiddenlg:blockml-2">Create New Diagram</span>
 				</Button>
 			</PageHeader>
+			{/* TODO: fix overflow issues and spacing */}
 			<ul
 				className="flex w-full flex-col items-center justify-center gap-2 overflow-y-auto p-6 md:grid md:grid-cols-2 md:gap-0 lg:grid-cols-3"
-				role="list"
-			>
+				role="list">
 				{diagrams ? (
-					diagrams.map((diagram) => (
+					diagrams.map(diagram => (
 						<Card
-							onClick={() =>
-								navigate(`/dashboard/${diagram._id}`)
-							}
+							onClick={() => navigate(`/dashboard/${diagram._id}`)}
 							key={diagram._id}
-							className="w-[368px] h-[256px] cursor-pointer"
-						>
+							className="w-[368px] h-[256px] cursor-pointer m-5">
 							<div
 								className="flex h-2/6 items-center justify-center bg-neutral-100 px-4 py-5 font-bold text-background dark:bg-zinc-950 sm:p-6 rounded-t-sm"
 								style={{
@@ -48,14 +43,9 @@ export default function Dashboard() {
 								}}
 							/>
 							<CardContent className="p-4">
-								<div className="text-lg font-bold">
-									{diagram.name}
-								</div>
+								<div className="text-lg font-bold">{diagram.name}</div>
 								<div className="text-sm text-muted-foreground">
-									Created on{" "}
-									{new Date(
-										diagram.createdAt
-									).toLocaleString()}
+									Created on {new Date(diagram.createdAt).toLocaleString()}
 								</div>
 							</CardContent>
 						</Card>

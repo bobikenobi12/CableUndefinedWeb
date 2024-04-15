@@ -40,6 +40,8 @@ import {
 	ContextMenuItem,
 	ContextMenuContent,
 	ContextMenuTrigger,
+	ContextMenuLabel,
+	ContextMenuSeparator,
 } from "@/components/ui/context-menu";
 
 import {
@@ -318,6 +320,17 @@ export default function Canvas(): JSX.Element {
 			});
 		}
 	};
+
+	const themeOptions = {
+		dark: atomOneDark,
+		light: atomOneLight,
+		system: window.matchMedia("(prefers-color-scheme: dark)").matches
+			? atomOneDark
+			: atomOneLight,
+	};
+
+	// @ts-ignore
+	const themeOption = themeOptions[theme];
 
 	return (
 		<div className="flex flex-1">
@@ -777,7 +790,7 @@ export default function Canvas(): JSX.Element {
 										// 		2
 										// 	)}
 										// </code>
-										<div className="flex flex-1 flex-col items-center w-full overflow-y-scroll px-2 py-3 rounded-md bg-slate-950 dark:bg-gray-800">
+										<div className="flex flex-1 flex-col items-center w-full overflow-y-scroll px-2 py-3 rounded-md bg-gray-100 dark:bg-gray-800">
 											<span className="text-sm text-muted-foreground mb-3">
 												{generatedCode.beforeText}
 											</span>
@@ -787,11 +800,7 @@ export default function Canvas(): JSX.Element {
 												}
 												text={generatedCode.code}
 												showLineNumbers={false}
-												theme={
-													theme === "dark"
-														? atomOneDark
-														: atomOneLight
-												}
+												theme={themeOption}
 												wrapLongLines
 												codeBlock
 											/>

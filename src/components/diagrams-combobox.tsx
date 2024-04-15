@@ -40,7 +40,7 @@ export function DiagramsCombobox() {
 	const [getDiagrams, { isLoading }] = useLazyGetDiagramsQuery();
 
 	const diagrams = useAppSelector(selectDiagrams);
-	const currentDiagramBySelector = useAppSelector((state) =>
+	const currentDiagramBySelector = useAppSelector(state =>
 		selectDiagramById(state, id ?? "")
 	);
 	const [open, setOpen] = React.useState(false);
@@ -72,29 +72,23 @@ export function DiagramsCombobox() {
 	}
 
 	return (
-		<Popover open={open} onOpenChange={setOpen}>
+		<Popover
+			open={open}
+			onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
 				<Button
 					variant="ghost"
 					role="combobox"
 					aria-expanded={open}
-					className="w-[220px] justify-between p-0"
-				>
+					className="w-[220px] justify-between p-0">
 					<div className="flex items-center gap-2 w-full">
 						<div
 							className="mr-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-primary
-						 p-0 font-bold text-primary-foreground"
-						>
-							<span>
-								{currentDiagram
-									? currentDiagram.name.charAt(0)
-									: "D"}
-							</span>
+						 p-0 font-bold text-primary-foreground">
+							<span>{currentDiagram ? currentDiagram.name.charAt(0) : "D"}</span>
 						</div>
 						<span className="line-clamp-1 font-semibold">
-							{currentDiagram
-								? currentDiagram.name
-								: "Select diagram"}
+							{currentDiagram ? currentDiagram.name : "Select diagram"}
 						</span>
 					</div>
 					<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 mr-3" />
@@ -108,9 +102,8 @@ export function DiagramsCombobox() {
 
 						<CommandGroup
 							heading="Diagrams"
-							className="data-[disabled]:pointer-events-none"
-						>
-							{diagrams.map((diagram) => (
+							className="data-[disabled]:pointer-events-none">
+							{diagrams.map(diagram => (
 								<CommandItem
 									key={diagram._id}
 									value={diagram.name}
@@ -119,14 +112,11 @@ export function DiagramsCombobox() {
 										setCurrentDiagram(diagram);
 										resetGraph();
 										setOpen(false);
-									}}
-								>
+									}}>
 									<Check
 										className={cn(
 											"mr-2 h-4 w-4 shrink-0 opacity-50",
-											diagram._id === currentDiagram?._id
-												? "opacity-100"
-												: "opacity-0"
+											diagram._id === currentDiagram?._id ? "opacity-100" : "opacity-0"
 										)}
 									/>
 									{diagram.name}
@@ -139,8 +129,7 @@ export function DiagramsCombobox() {
 								onSelect={() => {
 									setOpen(false);
 									navigate("/dashboard/new");
-								}}
-							>
+								}}>
 								<Plus className="mr-2 h-4 w-4" />
 								Create new diagram
 							</CommandItem>

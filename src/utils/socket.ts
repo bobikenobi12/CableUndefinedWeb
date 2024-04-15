@@ -35,19 +35,27 @@ function getSocket(namespace: SocketNamespace = SocketNamespace.DIAGRAMS) {
 	socket.on("connect", () => {
 		console.log("socket connected");
 	});
-	socket.on("error", (error) => {
-		// switch (error) {
-		// 	case ServerErrors.INVALID_TOKEN:
-		// 		console.error("Invalid token");
-		// 		break;
-		// 	case ServerErrors.UNAUTHORIZED:
-		// 		console.error("Unauthorized");
-		// 		break;
-		// 	default:
-		// 		console.error("Unknown error", error);
-		// 		break;
-		// }
-		console.error("Error", error);
+	socket.on("error", (error: ServerErrors) => {
+		switch (error) {
+			case ServerErrors.INVALID_TOKEN:
+				console.error("Invalid token");
+				break;
+			case ServerErrors.UNAUTHORIZED:
+				console.error("Unauthorized");
+				break;
+			case ServerErrors.EXPIRED_TOKEN:
+				console.error("Expired token");
+
+				localStorage.removeItem("_token");
+				localStorage.removeItem("user");
+
+				// TODO: Add a toast notification here and redirect to login page
+
+				break;
+			default:
+				console.error("Unknown error", error);
+				break;
+		}
 	});
 	return socket;
 }
