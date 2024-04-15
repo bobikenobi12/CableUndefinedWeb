@@ -67,15 +67,15 @@ export const diagramsSlice = createSlice({
 				);
 			}
 		);
-		builder.addMatcher(
-			diagramsApiSlice.endpoints.deleteDiagram.matchFulfilled,
-			(state, action: { payload: { _id: string } }) => {
-				const { _id } = action.payload;
-				state.diagrams = state.diagrams.filter((d) => d._id !== _id);
-				delete state.partsByDiagramId[_id];
-				localStorage.removeItem("indexTable");
-			}
-		);
+		// builder.addMatcher(
+		// 	diagramsApiSlice.endpoints.deleteDiagram.matchFulfilled,
+		// 	(state, action: { payload: { _id: string } }) => {
+		// 		const { _id } = action.payload;
+		// 		state.diagrams = state.diagrams.filter((d) => d._id !== _id);
+		// 		delete state.partsByDiagramId[_id];
+		// 		localStorage.removeItem("indexTable");
+		// 	}
+		// );
 		// builder.addMatcher(
 		// 	partsApiSlice.endpoints.addPart.matchFulfilled,
 		// 	(state, action: { payload: { diagram: Diagram } }) => {

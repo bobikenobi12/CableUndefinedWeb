@@ -623,25 +623,35 @@ export default function Canvas(): JSX.Element {
 												<AlertDialogAction className="px-0">
 													<Button
 														variant="destructive"
+														disabled={
+															isLoadingDeleteDiagram
+														}
 														onClick={() => {
 															try {
 																deleteDiagram(
 																	id as string
-																).unwrap();
-																dispatch(
-																	setOpenDeleteDiagramDialog(
-																		{
-																			open: false,
+																)
+																	.unwrap()
+																	.then(
+																		() => {
+																			dispatch(
+																				setOpenDeleteDiagramDialog(
+																					{
+																						open: false,
+																					}
+																				)
+																			);
+																			navigate(
+																				"/dashboard"
+																			);
+																			toast(
+																				{
+																					title: "Diagram deleted",
+																					description: `Deleted diagram with id ${id}`,
+																				}
+																			);
 																		}
-																	)
-																);
-																navigate(
-																	"/dashboard"
-																);
-																toast({
-																	title: "Diagram deleted",
-																	description: `Deleted diagram with id ${id}`,
-																});
+																	);
 															} catch (error) {
 																toast({
 																	variant:
@@ -653,6 +663,9 @@ export default function Canvas(): JSX.Element {
 															}
 														}}
 													>
+														{isLoadingDeleteDiagram && (
+															<Icons.spinner className="h-5 w-5 animate-spin mr-2" />
+														)}
 														Delete Diagram
 													</Button>
 												</AlertDialogAction>
