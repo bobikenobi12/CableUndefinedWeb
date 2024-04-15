@@ -132,12 +132,17 @@ export const RenameElementForm = ({
 
 				<DialogFooter className="flex justify-end items-center space-x-2 mt-2 rounded-b-md">
 					<DialogClose asChild>
-						<Button type="button" variant="secondary">
+						<Button
+							type="button"
+							variant="secondary">
 							Close
 						</Button>
 					</DialogClose>
 					<DialogClose asChild>
-						<Button type="submit" size="sm" className="px-3">
+						<Button
+							type="submit"
+							size="sm"
+							className="px-3">
 							Rename
 						</Button>
 					</DialogClose>
@@ -225,11 +230,11 @@ export default function ElementContextMenu({
 					<DiagramPart part={part} />
 				</ContextMenuTrigger>
 				<ContextMenuContent className="w-48">
-					<ContextMenuItem>
+					{/* <ContextMenuItem>
 						<DialogTrigger asChild>
 							<ContextMenuItem>Rename</ContextMenuItem>
 						</DialogTrigger>
-					</ContextMenuItem>
+					</ContextMenuItem> */}
 					<ContextMenuItem>Move up</ContextMenuItem>
 					<ContextMenuItem>Rotate</ContextMenuItem>
 					<ContextMenuItem
@@ -251,8 +256,7 @@ export default function ElementContextMenu({
 								});
 							}
 						}}
-						className="hover:text-red-500 cursor-pointer"
-					>
+						className="hover:text-red-500 cursor-pointer">
 						Remove
 					</ContextMenuItem>
 				</ContextMenuContent>
@@ -260,11 +264,12 @@ export default function ElementContextMenu({
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
 					<DialogTitle>Rename Element</DialogTitle>
-					<DialogDescription>
-						Enter a new name for the element
-					</DialogDescription>
+					<DialogDescription>Enter a new name for the element</DialogDescription>
 				</DialogHeader>
-				<RenameElementForm part={part} initialName={part.name} />
+				<RenameElementForm
+					part={part}
+					initialName={part.name}
+				/>
 			</DialogContent>
 		</Dialog>
 	);

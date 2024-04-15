@@ -43,6 +43,15 @@ function getSocket(namespace: SocketNamespace = SocketNamespace.DIAGRAMS) {
 			case ServerErrors.UNAUTHORIZED:
 				console.error("Unauthorized");
 				break;
+			case ServerErrors.EXPIRED_TOKEN:
+				console.error("Expired token");
+
+				localStorage.removeItem("_token");
+				localStorage.removeItem("user");
+
+				// TODO: Add a toast notification here and redirect to login page
+
+				break;
 			default:
 				console.error("Unknown error", error);
 				break;

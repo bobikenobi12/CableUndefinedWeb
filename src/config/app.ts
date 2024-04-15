@@ -14,10 +14,10 @@ export const appConfig: AppConfig = {
 	name: "CableUndefined",
 	github: {
 		title: "CableUndefined",
-		url: "https://github.com/Pupe6/",
+		url: "https://github.com/Pupe6/CableUndefinedWeb",
 	},
 	author: {
-		name: "bobikenobi12",
-		url: "https://github.com/bobikenobi12",
+		name: "Team Pupe6",
+		url: "https://github.com/Pupe6/",
 	},
 };

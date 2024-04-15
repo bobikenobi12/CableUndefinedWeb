@@ -56,11 +56,9 @@ export default function DiagramPart({
 					},
 				})
 					.unwrap()
-					.then((res) => {
+					.then(res => {
 						// set x and y because currently the part x and y get updated, but the element returns back to its initial spot and a little bit after returns to the new spot
-						const foundPart = res.diagram.parts.find(
-							(p) => p.id === part.id
-						);
+						const foundPart = res.diagram.parts.find(p => p.id === part.id);
 
 						if (foundPart) {
 							setTempPosition({ x: foundPart.x, y: foundPart.y });
@@ -103,16 +101,8 @@ export default function DiagramPart({
 		<Draggable
 			nodeRef={nodeRef}
 			position={{
-				x: isLoadingUpdatePartMutation
-					? tempPosition.x
-					: part
-					? part.x
-					: 0,
-				y: isLoadingUpdatePartMutation
-					? tempPosition.y
-					: part
-					? part.y
-					: 0,
+				x: isLoadingUpdatePartMutation ? tempPosition.x : part ? part.x : 0,
+				y: isLoadingUpdatePartMutation ? tempPosition.y : part ? part.y : 0,
 			}}
 			onDrag={handleDrag}
 			onStop={handleStop}
@@ -130,9 +120,8 @@ export default function DiagramPart({
 					position: "absolute",
 					transition: "transform 150ms ease",
 				}}
-				className="flex flex-col items-center space-y-2 p-2 rounded-md w-1/6"
-			>
-				<div className="flex items-center space-x-2">{part.name}</div>
+				className="flex flex-col items-center space-y-2 p-2 rounded-md w-1/6">
+				{/* <div className="flex items-center space-x-2">{part.name}</div> */}
 				<LitElementWrapper element={part} />
 			</div>
 		</Draggable>
