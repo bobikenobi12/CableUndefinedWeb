@@ -55,6 +55,7 @@ export const diagramsApiSlice = apiSlice.injectEndpoints({
 						if ("error" in data) {
 							reject(data.error);
 						} else {
+							console.log(data.diagram);
 							resolve({
 								data: data.diagram,
 							});

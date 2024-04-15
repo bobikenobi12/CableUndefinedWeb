@@ -25,8 +25,13 @@ import {
 import type { Part } from "@/types/parts";
 import type { Diagram } from "@/types/diagrams";
 import { Icons } from "../icons";
-import { useAppSelector } from "@/redux/hooks";
-import { selectPartsByDiagramId } from "@/redux/features/diagrams/diagrams-slice";
+
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+
+import {
+	selectPartsByDiagramId,
+	updatePartState,
+} from "@/redux/features/diagrams/diagrams-slice";
 
 type ReactFlowNode = Node<Part>;
 
@@ -45,19 +50,22 @@ function PartUpdaterNode(props: NodeProps<Part>) {
 					props.data.locked ? "bg-red-500" : "bg-green-500"
 				} ${
 					props.selected ? "border border-dashed border-blue-500" : ""
-				}`}
+				}
+				h-64 w-64 items-center justify-center
+				`}
 			>
-				{props.data.name}
-				<LitElementWrapper
-					part={{
-						angle: props.data.angle,
-						id: props.data.id,
-						name: props.data.name,
-						x: props.data.x,
-						y: props.data.y,
-						locked: props.data.locked,
-					}}
-				/>
+				<div className="nodrag">
+					<LitElementWrapper
+						part={{
+							angle: props.data.angle,
+							id: props.data.id,
+							name: props.data.name,
+							x: props.data.x,
+							y: props.data.y,
+							locked: props.data.locked,
+						}}
+					/>
+				</div>
 			</div>
 			<Handle type="source" position={Position.Bottom} />
 		</>
@@ -82,6 +90,8 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 
 	const [updatePart, { isLoading: isUpdatingPart }] = useUpdatePartMutation();
 	const [removePart, { isLoading: isRemovingPart }] = useRemovePartMutation();
+
+	const dispatch = useAppDispatch();
 
 	const { toast } = useToast();
 
@@ -118,6 +128,8 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 				nodeTypes={nodeTypes}
 				onNodesChange={onNodesChange}
 				onNodeDragStop={(event, node) => {
+					event.preventDefault();
+					console.log(node);
 					const { x, y } = node.position;
 					updatePart({
 						diagramId: diagram._id,
@@ -132,6 +144,7 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 					})
 						.unwrap()
 						.then((res) => {
+							// dispatch(updatePartState({ diagram: res.diagram }));
 							toast({
 								title: "Success",
 								description: `Part "${node.data.name}" position updated successfully.`,
