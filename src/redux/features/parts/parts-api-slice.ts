@@ -28,6 +28,7 @@ export const partsApiSlice = apiSlice.injectEndpoints({
 						if ("error" in data) {
 							reject(data.error);
 						} else {
+							console.log("added part", data);
 							resolve({ data });
 						}
 					});
@@ -40,7 +41,7 @@ export const partsApiSlice = apiSlice.injectEndpoints({
 		}),
 		updatePart: build.mutation<
 			{ diagram: Diagram },
-			{ _id: string; part: Part }
+			{ diagramId: string; partId: string; update: AddPart }
 		>({
 			queryFn: ({ diagramId, partId, update }) => {
 				const socket = getSocket(SocketNamespace.DIAGRAMS);
@@ -58,17 +59,9 @@ export const partsApiSlice = apiSlice.injectEndpoints({
 				return new Promise((resolve, reject) => {
 					socket.on(SocketEvent.UPDATE_PART, (data) => {
 						if ("error" in data) {
-							console.error(data.error);
 							reject(data.error);
 						} else {
-							// console.log(
-							// 	data,
-							// 	"data for the body",
-							// 	part,
-							// 	"part",
-							// 	_id,
-							// 	"_id"
-							// );
+							console.log(data);
 							resolve({ data });
 						}
 					});
@@ -81,15 +74,15 @@ export const partsApiSlice = apiSlice.injectEndpoints({
 		}),
 		removePart: build.mutation<
 			{ diagram: Diagram },
-			{ _id: string; partId: string }
+			{ diagramId: string; partId: string }
 		>({
-			queryFn: ({ _id, partId }) => {
+			queryFn: ({ diagramId, partId }) => {
 				const socket = getSocket(SocketNamespace.DIAGRAMS);
 
 				socket.emit(SocketEvent.REMOVE_PART, {
 					token: localStorage.getItem("_token"),
 					diagram: {
-						_id,
+						_id: diagramId,
 					},
 					part: {
 						id: partId,
@@ -106,6 +99,10 @@ export const partsApiSlice = apiSlice.injectEndpoints({
 					});
 				});
 			},
+			// invalidatesTags: (result) =>
+			// 	result
+			// 		? [{ type: "Diagrams", id: result.diagram._id }]
+			// 		: [{ type: "Diagrams", id: "LIST" }],
 		}),
 	}),
 });

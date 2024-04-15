@@ -13,40 +13,20 @@ import ReactFlow, {
 	BackgroundVariant,
 } from "reactflow";
 
-import {
-	ContextMenu,
-	ContextMenuTrigger,
-	ContextMenuContent,
-	ContextMenuItem,
-} from "@/components/ui/context-menu";
-import {
-	Dialog,
-	DialogTrigger,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogDescription,
-} from "@/components/ui/dialog";
-
 import { useToast } from "../ui/use-toast";
 
-import DiagramPart from "./diagram-part";
-import {
-	LitElementWrapper,
-	RenameElementForm,
-} from "@/components/canvas/rename-element";
+import { LitElementWrapper } from "@/components/canvas/rename-element";
 
 import {
-	partsApiSlice,
 	useRemovePartMutation,
 	useUpdatePartMutation,
 } from "@/redux/features/parts/parts-api-slice";
 
-import { partMappings } from "@/types/wokwi-elements-mapping";
-
 import type { Part } from "@/types/parts";
 import type { Diagram } from "@/types/diagrams";
 import { Icons } from "../icons";
+import { useAppSelector } from "@/redux/hooks";
+import { selectPartsByDiagramId } from "@/redux/features/diagrams/diagrams-slice";
 
 type ReactFlowNode = Node<Part>;
 
@@ -55,23 +35,30 @@ function PartUpdaterNode(props: NodeProps<Part>) {
 	// data includes label and ...part
 	// i need to get rid of the label
 
-	const [removePart, { isLoading: isRemovingPart }] = useRemovePartMutation();
-
 	const { toast } = useToast();
 
 	return (
 		<>
 			<Handle type="target" position={Position.Top} />
-			<DiagramPart
-				part={{
-					angle: props.data.angle,
-					id: props.data.id,
-					name: props.data.name,
-					x: props.data.x,
-					y: props.data.y,
-					locked: props.data.locked,
-				}}
-			/>
+			<div
+				className={`${
+					props.data.locked ? "bg-red-500" : "bg-green-500"
+				} ${
+					props.selected ? "border border-dashed border-blue-500" : ""
+				}`}
+			>
+				{props.data.name}
+				<LitElementWrapper
+					part={{
+						angle: props.data.angle,
+						id: props.data.id,
+						name: props.data.name,
+						x: props.data.x,
+						y: props.data.y,
+						locked: props.data.locked,
+					}}
+				/>
+			</div>
 			<Handle type="source" position={Position.Bottom} />
 		</>
 	);
@@ -82,23 +69,28 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 
 	const [nodes, setNodes] = useState<ReactFlowNode[]>([]);
 
+	const parts = useAppSelector((state) =>
+		selectPartsByDiagramId(state, diagram._id)
+	);
+
 	const onNodesChange = useCallback(
 		(changes: NodeChange[]) => {
-			console.log(changes);
 			setNodes((nodes) => applyNodeChanges<Part>(changes, nodes));
 		},
 		[setNodes]
 	);
 
 	const [updatePart, { isLoading: isUpdatingPart }] = useUpdatePartMutation();
+	const [removePart, { isLoading: isRemovingPart }] = useRemovePartMutation();
 
 	const { toast } = useToast();
 
 	useEffect(() => {
-		if (diagram) {
+		console.log(parts, "parts changed");
+		if (parts) {
 			console.log(diagram, "diagram changed");
 			setNodes(
-				diagram.parts.map((part) => ({
+				parts.map((part) => ({
 					id: part.id,
 					type: "partUpdater",
 					data: {
@@ -112,7 +104,7 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 				}))
 			);
 		}
-	}, [diagram, setNodes]);
+	}, [parts, diagram, setNodes]);
 
 	return (
 		<div className="flex-1 relative h-full">
@@ -120,11 +112,56 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 				panOnScroll={true}
 				panOnDrag={true}
 				nodesDraggable={true}
-				// elementsSelectable
+				elementsSelectable={true}
 				fitView
 				nodes={nodes}
 				nodeTypes={nodeTypes}
 				onNodesChange={onNodesChange}
+				onNodeDragStop={(event, node) => {
+					const { x, y } = node.position;
+					updatePart({
+						diagramId: diagram._id,
+						partId: node.id,
+						update: {
+							x,
+							y,
+							angle: 0,
+							locked: false,
+							name: node.data.name,
+						},
+					})
+						.unwrap()
+						.then((res) => {
+							toast({
+								title: "Success",
+								description: `Part "${node.data.name}" position updated successfully.`,
+							});
+						})
+						.catch((error) => {
+							toast({
+								title: "Error",
+								description: "Failed to update part position.",
+							});
+						});
+				}}
+				onNodesDelete={(nodes) => {
+					nodes.forEach((node) => {
+						removePart({ diagramId: diagram._id, partId: node.id })
+							.unwrap()
+							.then((res) => {
+								toast({
+									title: "Success",
+									description: `Part "${node.data.name}" removed successfully.`,
+								});
+							})
+							.catch((error) => {
+								toast({
+									title: "Error",
+									description: "Failed to remove part.",
+								});
+							});
+					});
+				}}
 			>
 				<MiniMap />
 				<Controls />

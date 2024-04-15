@@ -281,7 +281,7 @@ export default function Canvas(): JSX.Element {
 	function removePartHandler(partId: string) {
 		try {
 			removePart({
-				_id: id as string,
+				diagramId: id as string,
 				partId,
 			});
 			toast({

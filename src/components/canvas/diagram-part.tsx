@@ -10,7 +10,6 @@ import { useParams } from "react-router-dom";
 import { toast } from "../ui/use-toast";
 
 import { LitElementWrapper } from "./rename-element";
-import { LitElementWrapper } from "./rename-element";
 
 interface PartProps {
 	part: Part;
@@ -95,19 +94,7 @@ export default function DiagramPart({
 		>
 			<div className="flex items-center space-x-2">
 				{part.name} + gdagdaga
-		<div
-			style={{
-				transform: `rotate(${rotation}deg)`,
-				position: "absolute",
-				transition: "transform 150ms ease",
-			}}
-			className="flex flex-col items-center space-y-2 p-2 rounded-md w-1/6"
-		>
-			<div className="flex items-center space-x-2">
-				{part.name} + gdagdaga
 			</div>
-			<LitElementWrapper part={part} />
-		</div>
 			<LitElementWrapper part={part} />
 		</div>
 	);
