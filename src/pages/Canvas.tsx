@@ -613,9 +613,7 @@ export default function Canvas(): JSX.Element {
 						<ResizablePanel defaultSize={20}>
 							{tab === Tab.PARTS ? (
 								<div className="flex flex-col w-fit-content p-2 space-y-2 h-full">
-									<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
-										Choose Elements:
-									</h1>
+									<h1 className="text-2xl font-bold text-center p-2">Choose Elements</h1>
 									<ScrollArea
 										className="flex flex-col items-center overflow-y-auto whitespace-nowrap rounded-md border h-[80vh] dark:border-gray-800"
 										aria-orientation="vertical">
@@ -666,9 +664,7 @@ export default function Canvas(): JSX.Element {
 								</div>
 							) : tab === Tab.CODE ? (
 								<div className="flex flex-col w-fit-content p-2 space-y-2 h-full">
-									<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
-										Generate Code:
-									</h1>
+									<h1 className="text-2xl font-bold text-center p-2">Generate Code</h1>
 
 									{/* <pre className="mt-2 rounded-md p-4 bg-slate-950 dark:bg-gray-800 max-w-sm overflow-x-auto h-96"> */}
 									{isLoadingGenerateCodeMutation ? (
@@ -685,7 +681,7 @@ export default function Canvas(): JSX.Element {
 										// 	)}
 										// </code>
 										<div className="flex flex-1 flex-col items-center w-full overflow-y-scroll px-2 py-3 rounded-md bg-gray-100 dark:bg-gray-800">
-											<span className="text-sm text-muted-foreground mb-3">
+											<span className="text-sm font-bold text-muted-foreground mb-3">
 												{generatedCode.beforeText}
 											</span>
 											<CopyBlock
@@ -696,7 +692,7 @@ export default function Canvas(): JSX.Element {
 												wrapLongLines
 												codeBlock
 											/>
-											<span className="text-sm text-muted-foreground mt-3">
+											<span className="text-sm font-bold text-muted-foreground mt-3">
 												{generatedCode.afterText}
 											</span>
 										</div>
@@ -717,9 +713,7 @@ export default function Canvas(): JSX.Element {
 								</div>
 							) : tab === Tab.PREDICTION ? (
 								<div className="flex flex-col w-fit-content p-2 space-y-2">
-									<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
-										Prediction:
-									</h1>
+									<h1 className="text-2xl font-bold text-center p-2">Prediction</h1>
 									<div className="flex flex-col items-center space-y-2">
 										<PredictionForm
 											microcontroller={
@@ -735,9 +729,11 @@ export default function Canvas(): JSX.Element {
 												<span className="ml-2 text-white">Generating prediction...</span>
 											</div>
 										) : generatedPrediction !== "" ? (
-											<pre className="mt-2 rounded-md p-4 bg-slate-950 dark:bg-gray-800 max-w-sm overflow-x-auto text-white">
-												{generatedPrediction}
-											</pre>
+											<div className="flex flex-1 flex-col items-center w-full px-2 py-3 rounded-md bg-gray-100 dark:bg-gray-800">
+												<span className="text-sm font-bold text-muted-foreground mb-3">
+													{generatedPrediction}
+												</span>
+											</div>
 										) : (
 											<div className="flex justify-center items-center mt-3">
 												<span className="text-white">No prediction generated yet</span>
