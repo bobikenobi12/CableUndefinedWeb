@@ -139,6 +139,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 
 import { CopyBlock, atomOneDark, atomOneLight } from "react-code-blocks";
+import { useSerial } from "@/contexts/SerialContext";
+import { addConnection } from "@/utils/pathfinding";
 
 const updateDiagramSchema = z.object({
 	name: z.string().nonempty(),
@@ -193,6 +195,8 @@ export default function Canvas(): JSX.Element {
 
 	const { theme } = useTheme();
 	const { toast, dismiss, toasts } = useToast();
+
+	const { portState, write } = useSerial();
 
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
@@ -253,14 +257,30 @@ export default function Canvas(): JSX.Element {
 	useEffect(() => {
 		if (connection[0] !== "" && connection[1] !== "") {
 			try {
-				createConnection({
-					_id: id as string,
-					connection: [connection[0], connection[1]],
-				}).unwrap();
-				toast({
-					title: "Connection created",
-					description: `Connection between ${connection[0]} and ${connection[1]} created`,
-				});
+				const result = addConnection([connection[0], connection[1]]);
+
+				if (result.connections.length > 0) {
+					createConnection({
+						_id: id as string,
+						connection: [connection[0], connection[1]],
+					}).unwrap();
+
+					if (portState === "ready") {
+						write(result.connections.join("\n") + "\n");
+					}
+
+					toast({
+						title: "Connection created",
+						description: `Connection between ${connection[0]} and ${connection[1]} created`,
+					});
+				} else {
+					toast({
+						variant: "destructive",
+						title: "Connection Error",
+						description: `No connections found from ${connection[0]} to ${connection[1]}`,
+					});
+				}
+
 				setConnection({ 0: "", 1: "" });
 			} catch (error) {
 				toast({

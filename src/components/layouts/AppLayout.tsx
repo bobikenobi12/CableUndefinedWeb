@@ -18,7 +18,7 @@ import {
 
 import { useToast } from "@/components/ui/use-toast";
 
-import { CreditCard, LogOut, User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 
@@ -30,7 +30,6 @@ import {
 import { selectDiagramById } from "@/redux/features/diagrams/diagrams-slice";
 
 import { useLogoutMutation } from "@/redux/features/auth/auth-api-slice";
-import { logout } from "@/redux/features/auth/auth-handler-slice";
 
 import { useMatch, useLocation, useNavigate } from "react-router-dom";
 
@@ -41,14 +40,19 @@ import { UserCombobox } from "../user-combobox";
 import { DiagramsCombobox } from "../diagrams-combobox";
 import { Button } from "../ui/button";
 
-// import { listPorts, requestPort } from "@/utils/serial";
 import { addConnection, resetGraph } from "@/utils/pathfinding";
 
 import { useParams } from "react-router-dom";
 import { Icons } from "../icons";
 import { useSerial } from "@/contexts/SerialContext";
 import { useEffect } from "react";
-// import { getReader, getWriter, requestPort } from "@/utils/serial";
+
+import { selectIsAuthenticated } from "@/redux/features/auth/auth-handler-slice";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@radix-ui/react-tooltip";
 
 export function CableUndefined() {
 	return (
@@ -87,15 +91,15 @@ export function Applayout() {
 		try {
 			logoutMutation()
 				.unwrap()
-				.then(() => {
-					dispatch(logout());
+				.finally(() => {
 					dispatch(setOpenProfile(false));
+
 					toast({
 						title: "Success",
 						description: "Logged out successfully",
 					});
-					navigate("/login");
 				});
+
 			toast({
 				title: "Logging out...",
 				description: "Please wait",
@@ -123,26 +127,36 @@ export function Applayout() {
 		text: "Error",
 	};
 
-	// useEffect(() => {
-	// 	if (portState === "ready") {
-	// 		resetGraph();
+	const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
-	// 		(diagram?.connections || []).forEach(async connection => {
-	// 			let result = addConnection(connection);
+	useEffect(() => {
+		if (portState === "ready") {
+			resetGraph();
 
-	// 			if (result.connections.length === 0) {
-	// 				toast({
-	// 					title: "Connection Error",
-	// 					description: `No connections found for ${connection[0]} to ${connection[1]}`,
-	// 					variant: "destructive",
-	// 				});
-	// 				return;
-	// 			}
+			(diagram?.connections || []).forEach(async connection => {
+				let result = addConnection(connection);
 
-	// 			await write(result.connections.join("\n") + "\n");
-	// 		});
-	// 	}
-	// }, [portState]);
+				if (result.connections.length === 0) {
+					toast({
+						title: "Connection Error",
+						description: `No connections found for ${connection[0]} to ${connection[1]}`,
+						variant: "destructive",
+					});
+					return;
+				}
+
+				await write(result.connections.join("\n") + "\n");
+			});
+		}
+	}, [portState]);
+
+	useEffect(() => {
+		console.log(isAuthenticated);
+
+		if (!isAuthenticated) {
+			navigate("/login");
+		}
+	}, [isAuthenticated]);
 
 	return (
 		<>
@@ -179,47 +193,73 @@ export function Applayout() {
 					{match && location.pathname !== "/dashboard/new" && (
 						<DropdownMenu>
 							<DropdownMenuTrigger>
-								<div className="flex items-center gap-3 font-bold px-4 py-2 bg-gray-100 rounded-md dark:bg-gray-800">
-									<span
-										className={`w-3 h-3 rounded-full ${bgColor} flex items-center justify-center`}></span>
-									<span className="dark:text-white">{text}</span>
-								</div>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<div className="flex items-center gap-3 font-bold px-4 py-2 bg-gray-100 rounded-md dark:bg-gray-800">
+											<span
+												className={`w-3 h-3 rounded-full ${bgColor} flex items-center justify-center`}></span>
+											<span className="dark:text-white">{text}</span>
+										</div>
+									</TooltipTrigger>
+									<TooltipContent
+										side="bottom"
+										align="center"
+										className="mt-2 p-2 font-bold bg-gray-100 dark:bg-gray-800 rounded-lg">
+										Device port status
+									</TooltipContent>
+								</Tooltip>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent>
-								<DropdownMenuItem className="w-full">
-									<Button
+								<DropdownMenuItem
+									className="w-full"
+									onClick={async () => {
+										try {
+											if (portState === "open" || portState === "ready") {
+												await disconnect();
+
+												// ! When trying to reconnect to the same port, it fails because disconnect() is not awaited ???
+												// TODO: check this
+												const success = await connect();
+
+												if (!success) {
+													toast({
+														title: "Error",
+														description:
+															"Failed to connect to the port. Are you sure you selected a port?",
+														variant: "destructive",
+													});
+													return;
+												}
+											} else {
+												const success = await connect();
+
+												if (!success) {
+													toast({
+														title: "Error",
+														description:
+															"Failed to connect to the port. Are you sure you selected a port?",
+														variant: "destructive",
+													});
+													return;
+												}
+											}
+										} catch (error) {
+											console.error(error);
+											toast({
+												title: "Error",
+												description: (error as Error).message,
+												variant: "destructive",
+											});
+										}
+									}}>
+									{portState === "closed" ? "Open device port" : "Change device port"}
+								</DropdownMenuItem>
+								{portState !== "closed" && (
+									<DropdownMenuItem
 										className="w-full"
 										onClick={async () => {
 											try {
-												if (portState === "open" || portState === "ready") {
-													await disconnect();
-
-													// ! When trying to reconnect to the same port, it fails because disconnect() is not awaited ???
-													// TODO: check this
-													const success = await connect();
-
-													if (!success) {
-														toast({
-															title: "Error",
-															description:
-																"Failed to connect to the port. Are you sure you selected a port?",
-															variant: "destructive",
-														});
-														return;
-													}
-												} else {
-													const success = await connect();
-
-													if (!success) {
-														toast({
-															title: "Error",
-															description:
-																"Failed to connect to the port. Are you sure you selected a port?",
-															variant: "destructive",
-														});
-														return;
-													}
-												}
+												await disconnect();
 											} catch (error) {
 												console.error(error);
 												toast({
@@ -229,27 +269,7 @@ export function Applayout() {
 												});
 											}
 										}}>
-										{portState === "closed" ? "Open device port" : "Change device port"}
-									</Button>
-								</DropdownMenuItem>
-								{portState !== "closed" && (
-									<DropdownMenuItem className="w-full">
-										<Button
-											className="w-full"
-											onClick={async () => {
-												try {
-													await disconnect();
-												} catch (error) {
-													console.error(error);
-													toast({
-														title: "Error",
-														description: (error as Error).message,
-														variant: "destructive",
-													});
-												}
-											}}>
-											Close device port
-										</Button>
+										Close device port
 									</DropdownMenuItem>
 								)}
 							</DropdownMenuContent>
