@@ -156,15 +156,15 @@ export const RenameElementForm = ({
 // <wokwi-show-pins> --> partMappings["Show Pins"]
 // // element: DiagramsElement
 // </wokwi-show-pins>
-export function LitElementWrapper({ element }: { element: Part }) {
+export function LitElementWrapper({ part }: { part: Part }) {
 	const containerRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		if (containerRef.current) {
-			const el = partMappings[element.name];
+			const el = partMappings[part.name];
 			if (el) {
 				const showPins = new wokwiElements.ShowPinsElement();
-				switch (element.name) {
+				switch (part.name) {
 					case "MCU Breadboard" || "Main Breadboard":
 						showPins.pinRadius = 5;
 						showPins.pinHeight = 10;
@@ -191,7 +191,7 @@ export function LitElementWrapper({ element }: { element: Part }) {
 				containerRef.current.innerHTML = "";
 			}
 		};
-	}, [element]);
+	}, [part]);
 
 	return <div ref={containerRef}></div>;
 }

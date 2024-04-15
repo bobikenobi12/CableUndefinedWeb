@@ -6,14 +6,44 @@ import { Plus } from "lucide-react";
 
 import { useGetDiagramsQuery } from "@/redux/features/diagrams/diagrams-api-slice";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
 	const navigate = useNavigate();
 
-	const { data: diagrams, isLoading } = useGetDiagramsQuery();
+	const { data: diagrams, isLoading } = useGetDiagramsQuery(undefined, {
+		refetchOnMountOrArgChange: true,
+	});
 
 	if (isLoading) {
-		return <div>Loading...</div>;
+		// make a valid skeleton for this page that mimics the card
+		return (
+			<div className="mx-auto flex max-w-7xl grow flex-col py-6">
+				<PageHeader className="flex w-full flex-col-reverse items-center justify-between gap-4 px-6 md:flex-row">
+					<PageHeaderHeading>Your Diagrams</PageHeaderHeading>
+					<Button onClick={() => navigate("/dashboard/new")}>
+						<Plus />
+						<span className="blockmd:hiddenlg:blockml-2">
+							Create New Diagram
+						</span>
+					</Button>
+				</PageHeader>
+				<ul
+					className="flex w-full flex-col items-center justify-center gap-2 overflow-y-auto p-6 md:grid md:grid-cols-2 md:gap-0 lg:grid-cols-3"
+					role="list"
+				>
+					{Array.from({ length: 6 }).map((_, i) => (
+						<Card key={i} className="w-[368px] h-[256px]">
+							<Skeleton className="h-2/6" />
+							<CardContent className="p-4">
+								<Skeleton className="h-6" />
+								<Skeleton className="h-4" />
+							</CardContent>
+						</Card>
+					))}
+				</ul>
+			</div>
+		);
 	}
 
 	return (

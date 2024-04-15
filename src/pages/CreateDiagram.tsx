@@ -72,39 +72,6 @@ export default function CreateDiagram() {
 			})
 				.unwrap()
 				.then(res => {
-					// const diagramId = res._id;
-					// add 2 breadboards and 1 microcontroller to the diagram
-					// addPart({
-					// 	_id: diagramId,
-					// 	part: {
-					// 		x: 150,
-					// 		y: 250,
-					// 		name: "MCU Breadboard",
-					// 		locked: false,
-					// 		angle: 90,
-					// 	},
-					// });
-
-					// addPart({
-					// 	_id: diagramId,
-					// 	part: {
-					// 		x: 300,
-					// 		y: 250,
-					// 		name: "Main Breadboard",
-					// 		locked: false,
-					// 		angle: 90,
-					// 	},
-					// });
-					// addPart({
-					// 	_id: diagramId,
-					// 	part: {
-					// 		x: 150,
-					// 		y: 150,
-					// 		name: data.microcontroller,
-					// 		locked: false,
-					// 		angle: 0,
-					// 	},
-					// });
 					toast({
 						title: "Success",
 						description: "Diagram created successfully.",

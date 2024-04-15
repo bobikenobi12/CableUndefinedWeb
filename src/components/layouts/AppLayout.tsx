@@ -114,6 +114,8 @@ export function Applayout() {
 		}
 	};
 
+	const isAuthenticated = useAppSelector(selectIsAuthenticated);
+
 	const stateStyles = {
 		closed: { bgColor: "bg-red-500", text: "Closed" },
 		opening: { bgColor: "bg-red-500", text: "Opening..." },
@@ -126,8 +128,6 @@ export function Applayout() {
 		bgColor: "bg-red-500",
 		text: "Error",
 	};
-
-	const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
 	useEffect(() => {
 		if (portState === "ready") {
