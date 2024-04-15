@@ -44,16 +44,16 @@ function PartUpdaterNode(props: NodeProps<Part>) {
 
 	return (
 		<>
-			<Handle type="target" position={Position.Top} />
+			<Handle
+				type="target"
+				position={Position.Top}
+			/>
 			<div
-				className={`${
-					props.data.locked ? "bg-red-500" : "bg-green-500"
-				} ${
+				className={`${props.data.locked ? "bg-red-500" : "bg-green-500"} ${
 					props.selected ? "border border-dashed border-blue-500" : ""
 				}
 				h-64 w-64 items-center justify-center
-				`}
-			>
+				`}>
 				<div className="nodrag">
 					<LitElementWrapper
 						part={{
@@ -67,7 +67,10 @@ function PartUpdaterNode(props: NodeProps<Part>) {
 					/>
 				</div>
 			</div>
-			<Handle type="source" position={Position.Bottom} />
+			<Handle
+				type="source"
+				position={Position.Bottom}
+			/>
 		</>
 	);
 }
@@ -77,13 +80,13 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 
 	const [nodes, setNodes] = useState<ReactFlowNode[]>([]);
 
-	const parts = useAppSelector((state) =>
+	const parts = useAppSelector(state =>
 		selectPartsByDiagramId(state, diagram._id)
 	);
 
 	const onNodesChange = useCallback(
 		(changes: NodeChange[]) => {
-			setNodes((nodes) => applyNodeChanges<Part>(changes, nodes));
+			setNodes(nodes => applyNodeChanges<Part>(changes, nodes));
 		},
 		[setNodes]
 	);
@@ -100,7 +103,7 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 		if (parts) {
 			console.log(diagram, "diagram changed");
 			setNodes(
-				parts.map((part) => ({
+				parts.map(part => ({
 					id: part.id,
 					type: "partUpdater",
 					data: {
@@ -143,39 +146,38 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 						},
 					})
 						.unwrap()
-						.then((res) => {
+						.then(res => {
 							// dispatch(updatePartState({ diagram: res.diagram }));
 							toast({
 								title: "Success",
 								description: `Part "${node.data.name}" position updated successfully.`,
 							});
 						})
-						.catch((error) => {
+						.catch(error => {
 							toast({
 								title: "Error",
 								description: "Failed to update part position.",
 							});
 						});
 				}}
-				onNodesDelete={(nodes) => {
-					nodes.forEach((node) => {
+				onNodesDelete={nodes => {
+					nodes.forEach(node => {
 						removePart({ diagramId: diagram._id, partId: node.id })
 							.unwrap()
-							.then((res) => {
+							.then(res => {
 								toast({
 									title: "Success",
 									description: `Part "${node.data.name}" removed successfully.`,
 								});
 							})
-							.catch((error) => {
+							.catch(error => {
 								toast({
 									title: "Error",
 									description: "Failed to remove part.",
 								});
 							});
 					});
-				}}
-			>
+				}}>
 				<MiniMap />
 				<Controls />
 				{/* <Background color="#fff" gap={12} /> */}

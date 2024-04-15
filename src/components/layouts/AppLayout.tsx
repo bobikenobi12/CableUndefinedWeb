@@ -18,7 +18,7 @@ import {
 
 import { useToast } from "@/components/ui/use-toast";
 
-import { LogOut, User } from "lucide-react";
+import { LogOut, Unplug, Usb, User } from "lucide-react";
 
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 
@@ -252,6 +252,7 @@ export function Applayout() {
 											});
 										}
 									}}>
+									<Usb className="mr-2 h-4 w-4" />
 									{portState === "closed" ? "Open device port" : "Change device port"}
 								</DropdownMenuItem>
 								{portState !== "closed" && (
@@ -269,6 +270,7 @@ export function Applayout() {
 												});
 											}
 										}}>
+										<Unplug className="mr-2 h-4 w-4" />
 										Close device port
 									</DropdownMenuItem>
 								)}

@@ -266,6 +266,8 @@ export default function Canvas(): JSX.Element {
 						write(result.connections.join("\n") + "\n");
 					}
 
+					// TODO: add connection to the diagram or invalidate the diagram and refetch it
+
 					toast({
 						title: "Connection created",
 						description: `Connection between ${connection[0]} and ${connection[1]} created`,
