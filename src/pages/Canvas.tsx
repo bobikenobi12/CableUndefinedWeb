@@ -254,6 +254,7 @@ export default function Canvas(): JSX.Element {
 	useEffect(() => {
 		if (connection[0] !== "" && connection[1] !== "") {
 			try {
+				// TODO: when adding a connection with old ones available they aren't registered and it allows overlaps.
 				const result = addConnection([connection[0], connection[1]]);
 
 				if (result.connections.length > 0) {

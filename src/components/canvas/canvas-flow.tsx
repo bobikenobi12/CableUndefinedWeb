@@ -132,7 +132,8 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 				onNodesChange={onNodesChange}
 				onNodeDragStop={(event, node) => {
 					event.preventDefault();
-					console.log(node);
+					// console.log(node);
+					// console.log({ node, diagramId: diagram._id });
 					const { x, y } = node.position;
 					updatePart({
 						diagramId: diagram._id,
