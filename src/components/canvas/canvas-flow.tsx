@@ -53,12 +53,11 @@ function PartUpdaterNode(props: NodeProps<Part>) {
 
 	return (
 		<>
-			<Handle
-				type="target"
-				position={Position.Top}
-			/>
+			<Handle type="target" position={Position.Top} />
 			<div
-				className={`${props.data.locked ? "bg-red-500" : "bg-green-500"} ${
+				className={`${
+					props.data.locked ? "bg-red-500" : "bg-green-500"
+				} ${
 					props.selected ? "border border-dashed border-blue-500" : ""
 				}
 				h-64 w-64 items-center justify-center
@@ -76,10 +75,7 @@ function PartUpdaterNode(props: NodeProps<Part>) {
 					/>
 				</div>
 			</div>
-			<Handle
-				type="source"
-				position={Position.Bottom}
-			/>
+			<Handle type="source" position={Position.Bottom} />
 		</>
 	);
 }
@@ -135,7 +131,7 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 
 		console.log(diagram.connections, "connections");
 		const connection = diagram.connections?.find(
-			(c) => c[0] === ((type + elementName) as Pin)
+			c => c[0] === ((type + elementName) as Pin)
 		);
 
 		if (connection) {
@@ -154,7 +150,7 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 			return;
 		}
 
-		setConnection((prevConnection) => {
+		setConnection(prevConnection => {
 			console.log("setting connection");
 			// If both pins are empty, set the first pin
 			if (prevConnection[0] === "" && prevConnection[1] === "") {
