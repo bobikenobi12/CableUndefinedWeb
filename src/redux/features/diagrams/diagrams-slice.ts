@@ -8,6 +8,7 @@ import type { RootState } from "@/redux/store";
 
 import type { Diagram } from "@/types/diagrams";
 import type { Part } from "@/types/parts";
+import { connect } from "http2";
 
 interface DiagramsState {
 	diagrams: Diagram[];
@@ -111,6 +112,25 @@ export const diagramsSlice = createSlice({
 				);
 			}
 		);
+
+		builder.addMatcher(
+			connectionsApiSlice.endpoints.createConnection.matchFulfilled,
+			(state, action: { payload: { diagram: Diagram } }) => {
+				const { diagram } = action.payload;
+				state.diagrams = state.diagrams.map((d) =>
+					d._id === diagram._id ? diagram : d
+				);
+			}
+		);
+		builder.addMatcher(
+			connectionsApiSlice.endpoints.deleteConnection.matchFulfilled,
+			(state, action: { payload: { diagram: Diagram } }) => {
+				const { diagram } = action.payload;
+				state.diagrams = state.diagrams.map((d) =>
+					d._id === diagram._id ? diagram : d
+				);
+			}
+		);
 	},
 });
 
@@ -127,6 +147,9 @@ export const selectPartById = (
 	diagramId: string,
 	partId: string
 ) => state.diagrams.partsByDiagramId[diagramId].find((p) => p.id === partId);
+export const selectDiagramConnections = (state: RootState, id: string) =>
+	state.diagrams.diagrams.find((d) => d._id === id)?.connections;
+
 export const selectOpenDeleteDiagramDialog = (state: RootState) =>
 	state.diagrams.openDeleteDiagramDialog;
 

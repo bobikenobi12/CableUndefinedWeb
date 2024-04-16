@@ -263,14 +263,14 @@ function getMUXConnections(
 			const pin1 = device1.substring(5);
 			const pin2 = device2.substring(5);
 
-			let string = `${pin1}; ${pin2}; ${addingConnection}`;
+			let string = `${pin1};${pin2};${addingConnection}`;
 
 			if (device1Substr === "MUX1" && device1Substr === device2Substr) {
-				connections.push(`1000; ${string}`);
+				connections.push(`1000;${string}`);
 			}
 
 			if (device1Substr === "MUX2" && device1Substr === device2Substr) {
-				connections.push(`1001; ${string}`);
+				connections.push(`1001;${string}`);
 			}
 		}
 	});
@@ -498,14 +498,14 @@ export function addConnection(connection: [Pin, Pin]) {
 
 	if (path.length > 0) {
 		pathDescription = path
-			.map((vertex) => printDeviceSpecifications(vertex))
+			.map(vertex => printDeviceSpecifications(vertex))
 			.join(" -> ");
 
 		connections.push(...getMUXConnections(path, true));
 
 		let splitPath = pathDescription.split(" -> ");
 
-		connections[0] += `; ${splitPath[0].trim()}; ${splitPath[
+		connections[0] += `;${splitPath[0].trim()};${splitPath[
 			splitPath.length - 1
 		].trim()}`;
 	} else {
@@ -534,14 +534,14 @@ export function removeConnection(connection: [Pin, Pin]) {
 
 	if (path.length > 0) {
 		pathDescription = path
-			.map((vertex) => printDeviceSpecifications(vertex))
+			.map(vertex => printDeviceSpecifications(vertex))
 			.join(" -> ");
 
 		connections.push(...getMUXConnections(path, false));
 
 		let splitPath = pathDescription.split(" -> ");
 
-		connections[0] += `; ${splitPath[0].trim()}; ${splitPath[
+		connections[0] += `;${splitPath[0].trim()};${splitPath[
 			splitPath.length - 1
 		].trim()}`;
 	} else {
