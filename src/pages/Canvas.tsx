@@ -146,7 +146,7 @@ export default function Canvas(): JSX.Element {
 		useLazyWiringQuery();
 	const [, { isLoading: isLoadingGenerateCodeMutation }] = useLazyCodeQuery();
 
-	const diagram = useAppSelector((state) =>
+	const diagram = useAppSelector(state =>
 		selectDiagramById(state, id as string)
 	);
 
@@ -211,7 +211,7 @@ export default function Canvas(): JSX.Element {
 		},
 	});
 
-	const onSubmit: SubmitHandler<UpdateDiagramFormValues> = (data) => {
+	const onSubmit: SubmitHandler<UpdateDiagramFormValues> = data => {
 		try {
 			updateDiagram({
 				id: id as string,
@@ -249,15 +249,13 @@ export default function Canvas(): JSX.Element {
 					<Tooltip>
 						<TooltipTrigger
 							asChild
-							onClick={() => dispatch(setTab(Tab.PARTS))}
-						>
+							onClick={() => dispatch(setTab(Tab.PARTS))}>
 							<div
 								className={`flex h-9 w-9 items-center justify-center rounded-lg ${
 									tab === Tab.PARTS
 										? "bg-accent text-accent-foreground"
 										: "text-muted-foreground"
-								} transition-colors hover:text-foreground md:h-8 md:w-8`}
-							>
+								} transition-colors hover:text-foreground md:h-8 md:w-8`}>
 								<Component className="h-5 w-5" />
 								<span className="sr-only">Parts</span>
 							</div>
@@ -267,16 +265,14 @@ export default function Canvas(): JSX.Element {
 					<Tooltip>
 						<TooltipTrigger
 							asChild
-							onClick={() => dispatch(setTab(Tab.CODE))}
-						>
+							onClick={() => dispatch(setTab(Tab.CODE))}>
 							<div
 								className={`flex h-9 w-9 items-center justify-center rounded-lg 
 								${
 									tab === Tab.CODE
 										? "bg-accent text-accent-foreground"
 										: "text-muted-foreground"
-								} transition-colors hover:text-foreground md:h-8 md:w-8`}
-							>
+								} transition-colors hover:text-foreground md:h-8 md:w-8`}>
 								<CodeXml className="h-5 w-5" />
 								<span className="sr-only">Generate Code</span>
 							</div>
@@ -288,15 +284,13 @@ export default function Canvas(): JSX.Element {
 					<Tooltip>
 						<TooltipTrigger
 							asChild
-							onClick={() => dispatch(setTab(Tab.PREDICTION))}
-						>
+							onClick={() => dispatch(setTab(Tab.PREDICTION))}>
 							<div
 								className={`flex h-9 w-9 items-center justify-center rounded-lg ${
 									tab === Tab.PREDICTION
 										? "bg-accent text-accent-foreground"
 										: "text-muted-foreground"
-								} transition-colors hover:text-foreground md:h-8 md:w-8`}
-							>
+								} transition-colors hover:text-foreground md:h-8 md:w-8`}>
 								<Combine className="h-5 w-5" />
 								<span className="sr-only">Prediction</span>
 							</div>
@@ -310,15 +304,13 @@ export default function Canvas(): JSX.Element {
 							asChild
 							onClick={() => {
 								dispatch(setTab(Tab.SETTINGS));
-							}}
-						>
+							}}>
 							<div
 								className={`flex h-9 w-9 items-center justify-center rounded-lg ${
 									tab === Tab.SETTINGS
 										? "bg-accent text-accent-foreground"
 										: "text-muted-foreground"
-								}  transition-colors hover:text-foreground md:h-8 md:w-8`}
-							>
+								}  transition-colors hover:text-foreground md:h-8 md:w-8`}>
 								<Settings className="h-5 w-5" />
 								<span className="sr-only">Settings</span>
 							</div>
@@ -353,8 +345,7 @@ export default function Canvas(): JSX.Element {
 											<form
 												onSubmit={updateDiagramForm.handleSubmit(
 													onSubmit
-												)}
-											>
+												)}>
 												<div className="grid gap-2">
 													<div className="grid gap-3">
 														<FormField
@@ -408,8 +399,7 @@ export default function Canvas(): JSX.Element {
 																	</FormLabel>
 																	<FormControl>
 																		<Select
-																			{...field}
-																		>
+																			{...field}>
 																			<SelectTrigger>
 																				<SelectValue placeholder="Select a microcontroller" />
 																			</SelectTrigger>
@@ -421,23 +411,20 @@ export default function Canvas(): JSX.Element {
 																					<SelectItem
 																						value={
 																							Microcontroller.ATTiny85
-																						}
-																					>
+																						}>
 																						ATTiny85
 																					</SelectItem>
 																					<SelectItem
 																						value={
 																							Microcontroller.ArduinoNano
-																						}
-																					>
+																						}>
 																						Arduino
 																						Nano
 																					</SelectItem>
 																					<SelectItem
 																						value={
 																							Microcontroller.RasberryPiPico
-																						}
-																					>
+																						}>
 																						Rasberry
 																						Pi
 																						Pico
@@ -445,8 +432,7 @@ export default function Canvas(): JSX.Element {
 																					<SelectItem
 																						value={
 																							Microcontroller.ESP32
-																						}
-																					>
+																						}>
 																						ESP32
 																					</SelectItem>
 																				</SelectGroup>
@@ -476,8 +462,7 @@ export default function Canvas(): JSX.Element {
 																	updateDiagramForm.getValues()
 																		.microcontroller ===
 																		diagram?.microcontroller)
-															}
-														>
+															}>
 															Save Changes
 														</Button>
 													</div>
@@ -510,8 +495,7 @@ export default function Canvas(): JSX.Element {
 															}
 														)
 													)
-												}
-											>
+												}>
 												Delete Diagram
 											</Button>
 										</AlertDialogTrigger>
@@ -539,8 +523,7 @@ export default function Canvas(): JSX.Element {
 																}
 															)
 														);
-													}}
-												>
+													}}>
 													Cancel
 												</AlertDialogCancel>
 												<AlertDialogAction className="px-0">
@@ -584,8 +567,7 @@ export default function Canvas(): JSX.Element {
 																		error as string,
 																});
 															}
-														}}
-													>
+														}}>
 														{isLoadingDeleteDiagram && (
 															<Icons.spinner className="h-5 w-5 animate-spin mr-2" />
 														)}
@@ -602,18 +584,16 @@ export default function Canvas(): JSX.Element {
 				) : (
 					<ResizablePanelGroup
 						direction="horizontal"
-						className="h-full"
-					>
+						className="h-full">
 						<ResizablePanel defaultSize={20}>
 							{tab === Tab.PARTS ? (
 								<div className="flex flex-col w-fit-content p-2 space-y-2 h-full">
-									<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
-										Choose Elements:
+									<h1 className="text-2xl font-bold text-center p-2">
+										Choose Elements
 									</h1>
 									<ScrollArea
 										className="flex flex-col items-center overflow-y-auto whitespace-nowrap rounded-md border h-[80vh] dark:border-gray-800"
-										aria-orientation="vertical"
-									>
+										aria-orientation="vertical">
 										{Object.entries(partMappings).map(
 											([name], idx) => (
 												<div
@@ -627,8 +607,8 @@ export default function Canvas(): JSX.Element {
 																part: {
 																	name,
 																	angle: 0,
-																	x: 24.513531513513513,
-																	y: 24.513531513513513,
+																	x: 0,
+																	y: 0,
 																	locked: false,
 																},
 															})
@@ -651,8 +631,7 @@ export default function Canvas(): JSX.Element {
 																							]
 																								.id
 																						)
-																					}
-																				>
+																					}>
 																					Undo
 																				</Button>
 																			),
@@ -670,8 +649,7 @@ export default function Canvas(): JSX.Element {
 																	error as string,
 															});
 														}
-													}}
-												>
+													}}>
 													{name}
 												</div>
 											)
@@ -680,8 +658,8 @@ export default function Canvas(): JSX.Element {
 								</div>
 							) : tab === Tab.CODE ? (
 								<div className="flex flex-col w-fit-content p-2 space-y-2 h-full">
-									<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
-										Generate Code:
+									<h1 className="text-2xl font-bold text-center p-2">
+										Generate Code
 									</h1>
 
 									{/* <pre className="mt-2 rounded-md p-4 bg-slate-950 dark:bg-gray-800 max-w-sm overflow-x-auto h-96"> */}
@@ -701,7 +679,7 @@ export default function Canvas(): JSX.Element {
 										// 	)}
 										// </code>
 										<div className="flex flex-1 flex-col items-center w-full overflow-y-scroll px-2 py-3 rounded-md bg-gray-100 dark:bg-gray-800">
-											<span className="text-sm text-muted-foreground mb-3">
+											<span className="text-sm font-bold text-muted-foreground mb-3">
 												{generatedCode.beforeText}
 											</span>
 											<CopyBlock
@@ -714,7 +692,7 @@ export default function Canvas(): JSX.Element {
 												wrapLongLines
 												codeBlock
 											/>
-											<span className="text-sm text-muted-foreground mt-3">
+											<span className="text-sm font-bold text-muted-foreground mt-3">
 												{generatedCode.afterText}
 											</span>
 										</div>
@@ -738,8 +716,8 @@ export default function Canvas(): JSX.Element {
 								</div>
 							) : tab === Tab.PREDICTION ? (
 								<div className="flex flex-col w-fit-content p-2 space-y-2">
-									<h1 className="text-2xl font-bold text-center p-2 bg-gray-100 rounded-md dark:bg-gray-800">
-										Prediction:
+									<h1 className="text-2xl font-bold text-center p-2">
+										Prediction
 									</h1>
 									<div className="flex flex-col items-center space-y-2">
 										<PredictionForm
@@ -759,9 +737,11 @@ export default function Canvas(): JSX.Element {
 												</span>
 											</div>
 										) : generatedPrediction !== "" ? (
-											<pre className="mt-2 rounded-md p-4 bg-slate-950 dark:bg-gray-800 max-w-sm overflow-x-auto text-white">
-												{generatedPrediction}
-											</pre>
+											<div className="flex flex-1 flex-col items-center w-full px-2 py-3 rounded-md bg-gray-100 dark:bg-gray-800">
+												<span className="text-sm font-bold text-muted-foreground mb-3">
+													{generatedPrediction}
+												</span>
+											</div>
 										) : (
 											<div className="flex justify-center items-center mt-3">
 												<span className="text-white">

@@ -134,7 +134,7 @@ export function Applayout() {
 			resetGraph();
 
 			(diagram?.connections || []).forEach(async connection => {
-				let result = addConnection(connection);
+				const result = addConnection(connection);
 
 				if (result.connections.length === 0) {
 					toast({
