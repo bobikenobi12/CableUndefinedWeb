@@ -29,9 +29,18 @@ import { Icons } from "../icons";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 
 import {
+	selectDiagramConnections,
 	selectPartsByDiagramId,
 	updatePartState,
 } from "@/redux/features/diagrams/diagrams-slice";
+import { partTagsToConnectionStrings } from "@/types/wokwi-elements-mapping";
+import { addConnection } from "@/utils/pathfinding";
+import { Pin } from "@/types/connections";
+import { useSerial } from "@/contexts/SerialContext";
+import {
+	useCreateConnectionMutation,
+	useDeleteConnectionMutation,
+} from "@/redux/features/connections/connections-api-slice";
 
 type ReactFlowNode = Node<Part>;
 
@@ -76,6 +85,15 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 	const nodeTypes = useMemo(() => ({ partUpdater: PartUpdaterNode }), []);
 
 	const [nodes, setNodes] = useState<ReactFlowNode[]>([]);
+	const [connection, setConnection] = useState<{
+		0: Pin | "";
+		1: Pin | "";
+	}>({
+		0: "",
+		1: "",
+	});
+
+	const { portState, write } = useSerial();
 
 	const parts = useAppSelector((state) =>
 		selectPartsByDiagramId(state, diagram._id)
@@ -91,9 +109,127 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 	const [updatePart, { isLoading: isUpdatingPart }] = useUpdatePartMutation();
 	const [removePart, { isLoading: isRemovingPart }] = useRemovePartMutation();
 
+	const [removeConnection, { isLoading: isLoadingRemoveConnectionMutation }] =
+		useDeleteConnectionMutation();
+	const [createConnection, { isLoading: isLoadingCreateConnectionMutation }] =
+		useCreateConnectionMutation();
+
 	const dispatch = useAppDispatch();
 
 	const { toast } = useToast();
+
+	// const connections = useAppSelector((state) =>
+	// 	selectDiagramConnections(state, diagram._id)
+	// );
+
+	const handleCustomEvent = (event: CustomEvent) => {
+		const { pin } = event.detail;
+		const { elementName, pinName, x, y } = pin;
+		const type = partTagsToConnectionStrings[pinName];
+
+		// check if diagram.connections contains the connection
+		// if it does, remove it
+
+		console.log(diagram.connections, "connections");
+		const connection = diagram.connections?.find(
+			(c) => c[0] === ((type + elementName) as Pin)
+		);
+
+		if (connection) {
+			console.log(connection);
+			removeConnection({
+				diagramId: diagram._id,
+				connection: connection,
+			})
+				.unwrap()
+				.then(() => {
+					toast({
+						title: "Connection removed",
+						description: `Removed connection between ${connection[0]} and ${connection[1]}`,
+					});
+				});
+			return;
+		}
+
+		setConnection((prevConnection) => {
+			console.log("setting connection");
+			// If both pins are empty, set the first pin
+			if (prevConnection[0] === "" && prevConnection[1] === "") {
+				return { ...prevConnection, 0: (type + elementName) as Pin };
+			}
+
+			// If the first pin is clicked again, reset the connection
+			if (prevConnection[0] === type + elementName) {
+				return { ...prevConnection, 0: "" };
+			}
+
+			// If the first pin is not empty and the second pin is empty, set the second pin
+			if (prevConnection[0] !== "" && prevConnection[1] === "") {
+				return { ...prevConnection, 1: (type + elementName) as Pin };
+			}
+
+			// Return previous state if none of the above conditions are met
+			return prevConnection;
+		});
+	};
+
+	useEffect(() => {
+		if (connection[0] !== "" && connection[1] !== "") {
+			try {
+				const result = addConnection([connection[0], connection[1]]);
+
+				if (result.connections.length > 0) {
+					createConnection({
+						diagramId: diagram._id,
+						connection: [connection[0], connection[1]],
+					}).unwrap();
+
+					if (portState === "ready") {
+						write(result.connections.join("\n") + "\n");
+					}
+
+					// TODO: add connection to the diagram or invalidate the diagram and refetch it
+
+					toast({
+						title: "Connection created",
+						description: `Connection between ${connection[0]} and ${connection[1]} created`,
+					});
+				} else {
+					toast({
+						variant: "destructive",
+						title: "Connection Error",
+						description: `No connections found from ${connection[0]} to ${connection[1]}`,
+					});
+				}
+
+				setConnection({ 0: "", 1: "" });
+			} catch (error) {
+				toast({
+					variant: "destructive",
+					title: "Failed to create connection",
+					description: error as string,
+				});
+			}
+		}
+	}, [connection]);
+
+	useEffect(() => {
+		document.addEventListener(
+			"pin-click",
+			handleCustomEvent as EventListener
+		);
+		document.addEventListener(
+			"pin-click",
+			handleCustomEvent as EventListener
+		);
+
+		return () => {
+			document.removeEventListener(
+				"pin-click",
+				handleCustomEvent as EventListener
+			);
+		};
+	}, []);
 
 	useEffect(() => {
 		console.log(parts, "parts changed");
