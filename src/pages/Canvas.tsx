@@ -7,15 +7,6 @@ import {
 } from "@/components/ui/resizable";
 
 import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogDescription,
-	DialogTrigger,
-} from "@/components/ui/dialog";
-
-import {
 	AlertDialog,
 	AlertDialogAction,
 	AlertDialogCancel,
@@ -34,15 +25,6 @@ import {
 } from "@/components/ui/tooltip";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-import {
-	ContextMenu,
-	ContextMenuItem,
-	ContextMenuContent,
-	ContextMenuTrigger,
-	ContextMenuLabel,
-	ContextMenuSeparator,
-} from "@/components/ui/context-menu";
 
 import {
 	PageHeader,
@@ -79,7 +61,6 @@ import { Combine, CodeXml, Component, Settings } from "lucide-react";
 
 import { useTheme } from "@/hooks/useTheme";
 
-import { ReactFlow, MiniMap, Controls } from "reactflow";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 
 import {
@@ -153,14 +134,6 @@ type UpdateDiagramFormValues = z.infer<typeof updateDiagramSchema>;
 export default function Canvas(): JSX.Element {
 	const { id } = useParams<{ id: string }>();
 
-	const [connection, setConnection] = React.useState<{
-		0: Pin | "";
-		1: Pin | "";
-	}>({
-		0: "",
-		1: "",
-	});
-
 	const [updateDiagram, { isLoading: isLoadingUpdateDiagram }] =
 		useUpdateDiagramMutation();
 	const [deleteDiagram, { isLoading: isLoadingDeleteDiagram }] =
@@ -168,20 +141,19 @@ export default function Canvas(): JSX.Element {
 
 	const [removePart, { isLoading: isLoadingRemovePartMutation }] =
 		useRemovePartMutation();
-	const [removeConnection, { isLoading: isLoadingRemoveConnectionMutation }] =
-		useDeleteConnectionMutation();
-	const [createConnection, { isLoading: isLoadingCreateConnectionMutation }] =
-		useCreateConnectionMutation();
 
 	const [, { isLoading: isLoadingGeneratePredictionMutation }] =
 		useLazyWiringQuery();
 	const [, { isLoading: isLoadingGenerateCodeMutation }] = useLazyCodeQuery();
 
-	const diagram = useAppSelector(state =>
+	const diagram = useAppSelector((state) =>
 		selectDiagramById(state, id as string)
 	);
+
 	const tab = useAppSelector(selectTab);
-	const openDeleteDiagramDialog = useAppSelector(selectOpenDeleteDiagramDialog);
+	const openDeleteDiagramDialog = useAppSelector(
+		selectOpenDeleteDiagramDialog
+	);
 	const generatedCode = useAppSelector(selectCode);
 	const generatedPrediction = useAppSelector(selectPrediction);
 
@@ -191,48 +163,8 @@ export default function Canvas(): JSX.Element {
 	const { theme } = useTheme();
 	const { toast, dismiss, toasts } = useToast();
 
-	const { portState, write } = useSerial();
-
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
-	const handleCustomEvent = (event: CustomEvent) => {
-		console.log(event);
-		const { pin } = event.detail;
-		const { elementName, pinName, x, y } = pin;
-		const type = partTagsToConnectionStrings[pinName];
-
-		setConnection(prevConnection => {
-			// If both pins are empty, set the first pin
-			if (prevConnection[0] === "" && prevConnection[1] === "") {
-				return { ...prevConnection, 0: (type + elementName) as Pin };
-			}
-
-			// If the first pin is clicked again, reset the connection
-			if (prevConnection[0] === type + elementName) {
-				return { ...prevConnection, 0: "" };
-			}
-
-			// If the first pin is not empty and the second pin is empty, set the second pin
-			if (prevConnection[0] !== "" && prevConnection[1] === "") {
-				return { ...prevConnection, 1: (type + elementName) as Pin };
-			}
-
-			// Return previous state if none of the above conditions are met
-			return prevConnection;
-		});
-	};
-
-	useEffect(() => {
-		document.addEventListener("pin-click", handleCustomEvent as EventListener);
-		document.addEventListener("pin-click", handleCustomEvent as EventListener);
-
-		return () => {
-			document.removeEventListener(
-				"pin-click",
-				handleCustomEvent as EventListener
-			);
-		};
-	}, []);
 
 	useEffect(() => {
 		if (isLoadingRemovePartMutation) {
@@ -250,46 +182,6 @@ export default function Canvas(): JSX.Element {
 			}, 3000);
 		}
 	}, [isLoadingRemovePartMutation]);
-
-	useEffect(() => {
-		if (connection[0] !== "" && connection[1] !== "") {
-			try {
-				const result = addConnection([connection[0], connection[1]]);
-
-				if (result.connections.length > 0) {
-					createConnection({
-						_id: id as string,
-						connection: [connection[0], connection[1]],
-					}).unwrap();
-
-					if (portState === "ready") {
-						write(result.connections.join("\n") + "\n");
-					}
-
-					// TODO: add connection to the diagram or invalidate the diagram and refetch it
-
-					toast({
-						title: "Connection created",
-						description: `Connection between ${connection[0]} and ${connection[1]} created`,
-					});
-				} else {
-					toast({
-						variant: "destructive",
-						title: "Connection Error",
-						description: `No connections found from ${connection[0]} to ${connection[1]}`,
-					});
-				}
-
-				setConnection({ 0: "", 1: "" });
-			} catch (error) {
-				toast({
-					variant: "destructive",
-					title: "Failed to create connection",
-					description: error as string,
-				});
-			}
-		}
-	}, [connection]);
 
 	function removePartHandler(partId: string) {
 		try {
@@ -314,11 +206,12 @@ export default function Canvas(): JSX.Element {
 		resolver: zodResolver(updateDiagramSchema),
 		defaultValues: {
 			name: diagram?.name ?? "",
-			microcontroller: diagram?.microcontroller ?? Microcontroller.ATTiny85,
+			microcontroller:
+				diagram?.microcontroller ?? Microcontroller.ATTiny85,
 		},
 	});
 
-	const onSubmit: SubmitHandler<UpdateDiagramFormValues> = data => {
+	const onSubmit: SubmitHandler<UpdateDiagramFormValues> = (data) => {
 		try {
 			updateDiagram({
 				id: id as string,
@@ -356,13 +249,15 @@ export default function Canvas(): JSX.Element {
 					<Tooltip>
 						<TooltipTrigger
 							asChild
-							onClick={() => dispatch(setTab(Tab.PARTS))}>
+							onClick={() => dispatch(setTab(Tab.PARTS))}
+						>
 							<div
 								className={`flex h-9 w-9 items-center justify-center rounded-lg ${
 									tab === Tab.PARTS
 										? "bg-accent text-accent-foreground"
 										: "text-muted-foreground"
-								} transition-colors hover:text-foreground md:h-8 md:w-8`}>
+								} transition-colors hover:text-foreground md:h-8 md:w-8`}
+							>
 								<Component className="h-5 w-5" />
 								<span className="sr-only">Parts</span>
 							</div>
@@ -372,30 +267,36 @@ export default function Canvas(): JSX.Element {
 					<Tooltip>
 						<TooltipTrigger
 							asChild
-							onClick={() => dispatch(setTab(Tab.CODE))}>
+							onClick={() => dispatch(setTab(Tab.CODE))}
+						>
 							<div
 								className={`flex h-9 w-9 items-center justify-center rounded-lg 
 								${
 									tab === Tab.CODE
 										? "bg-accent text-accent-foreground"
 										: "text-muted-foreground"
-								} transition-colors hover:text-foreground md:h-8 md:w-8`}>
+								} transition-colors hover:text-foreground md:h-8 md:w-8`}
+							>
 								<CodeXml className="h-5 w-5" />
 								<span className="sr-only">Generate Code</span>
 							</div>
 						</TooltipTrigger>
-						<TooltipContent side="right">Generate Code</TooltipContent>
+						<TooltipContent side="right">
+							Generate Code
+						</TooltipContent>
 					</Tooltip>
 					<Tooltip>
 						<TooltipTrigger
 							asChild
-							onClick={() => dispatch(setTab(Tab.PREDICTION))}>
+							onClick={() => dispatch(setTab(Tab.PREDICTION))}
+						>
 							<div
 								className={`flex h-9 w-9 items-center justify-center rounded-lg ${
 									tab === Tab.PREDICTION
 										? "bg-accent text-accent-foreground"
 										: "text-muted-foreground"
-								} transition-colors hover:text-foreground md:h-8 md:w-8`}>
+								} transition-colors hover:text-foreground md:h-8 md:w-8`}
+							>
 								<Combine className="h-5 w-5" />
 								<span className="sr-only">Prediction</span>
 							</div>
@@ -409,13 +310,15 @@ export default function Canvas(): JSX.Element {
 							asChild
 							onClick={() => {
 								dispatch(setTab(Tab.SETTINGS));
-							}}>
+							}}
+						>
 							<div
 								className={`flex h-9 w-9 items-center justify-center rounded-lg ${
 									tab === Tab.SETTINGS
 										? "bg-accent text-accent-foreground"
 										: "text-muted-foreground"
-								}  transition-colors hover:text-foreground md:h-8 md:w-8`}>
+								}  transition-colors hover:text-foreground md:h-8 md:w-8`}
+							>
 								<Settings className="h-5 w-5" />
 								<span className="sr-only">Settings</span>
 							</div>
@@ -436,23 +339,38 @@ export default function Canvas(): JSX.Element {
 						<div className="flex w-full flex-col items-center justify-center">
 							<Card className="mt-4 w-full rounded-lg border p-4 sm:p-6">
 								<CardHeader>
-									<div className="text-lg font-bold">General</div>
+									<div className="text-lg font-bold">
+										General
+									</div>
 									<div className="text-sm text-muted-foreground">
-										Adjust your diagram's name and microcontroller
+										Adjust your diagram's name and
+										microcontroller
 									</div>
 								</CardHeader>
 								<CardContent>
 									<div className="flex flex-col">
 										<Form {...updateDiagramForm}>
-											<form onSubmit={updateDiagramForm.handleSubmit(onSubmit)}>
+											<form
+												onSubmit={updateDiagramForm.handleSubmit(
+													onSubmit
+												)}
+											>
 												<div className="grid gap-2">
 													<div className="grid gap-3">
 														<FormField
-															control={updateDiagramForm.control}
+															control={
+																updateDiagramForm.control
+															}
 															name="name"
-															render={({ field, formState }) => (
+															render={({
+																field,
+																formState,
+															}) => (
 																<FormItem>
-																	<FormLabel>Diagram Name</FormLabel>
+																	<FormLabel>
+																		Diagram
+																		Name
+																	</FormLabel>
 																	<FormControl>
 																		<Input
 																			id="name"
@@ -463,34 +381,72 @@ export default function Canvas(): JSX.Element {
 																			{...field}
 																		/>
 																	</FormControl>
-																	<FormMessage>{formState.errors.name?.message}</FormMessage>
+																	<FormMessage>
+																		{
+																			formState
+																				.errors
+																				.name
+																				?.message
+																		}
+																	</FormMessage>
 																</FormItem>
 															)}
 														/>
 														<FormField
-															control={updateDiagramForm.control}
+															control={
+																updateDiagramForm.control
+															}
 															name="microcontroller"
-															render={({ field, formState }) => (
+															render={({
+																field,
+																formState,
+															}) => (
 																<FormItem>
-																	<FormLabel>Diagram Microcontroller</FormLabel>
+																	<FormLabel>
+																		Diagram
+																		Microcontroller
+																	</FormLabel>
 																	<FormControl>
-																		<Select {...field}>
+																		<Select
+																			{...field}
+																		>
 																			<SelectTrigger>
 																				<SelectValue placeholder="Select a microcontroller" />
 																			</SelectTrigger>
 																			<SelectContent>
 																				<SelectGroup>
-																					<SelectLabel>Microcontrollers</SelectLabel>
-																					<SelectItem value={Microcontroller.ATTiny85}>
+																					<SelectLabel>
+																						Microcontrollers
+																					</SelectLabel>
+																					<SelectItem
+																						value={
+																							Microcontroller.ATTiny85
+																						}
+																					>
 																						ATTiny85
 																					</SelectItem>
-																					<SelectItem value={Microcontroller.ArduinoNano}>
-																						Arduino Nano
+																					<SelectItem
+																						value={
+																							Microcontroller.ArduinoNano
+																						}
+																					>
+																						Arduino
+																						Nano
 																					</SelectItem>
-																					<SelectItem value={Microcontroller.RasberryPiPico}>
-																						Rasberry Pi Pico
+																					<SelectItem
+																						value={
+																							Microcontroller.RasberryPiPico
+																						}
+																					>
+																						Rasberry
+																						Pi
+																						Pico
 																					</SelectItem>
-																					<SelectItem value={Microcontroller.ESP32}>
+																					<SelectItem
+																						value={
+																							Microcontroller.ESP32
+																						}
+																					>
 																						ESP32
 																					</SelectItem>
 																				</SelectGroup>
@@ -498,7 +454,12 @@ export default function Canvas(): JSX.Element {
 																		</Select>
 																	</FormControl>
 																	<FormMessage>
-																		{formState.errors.microcontroller?.message}
+																		{
+																			formState
+																				.errors
+																				.microcontroller
+																				?.message
+																		}
 																	</FormMessage>
 																</FormItem>
 															)}
@@ -509,10 +470,14 @@ export default function Canvas(): JSX.Element {
 															type="submit"
 															disabled={
 																isLoadingUpdateDiagram ||
-																(updateDiagramForm.getValues().name === diagram?.name &&
-																	updateDiagramForm.getValues().microcontroller ===
+																(updateDiagramForm.getValues()
+																	.name ===
+																	diagram?.name &&
+																	updateDiagramForm.getValues()
+																		.microcontroller ===
 																		diagram?.microcontroller)
-															}>
+															}
+														>
 															Save Changes
 														</Button>
 													</div>
@@ -524,9 +489,12 @@ export default function Canvas(): JSX.Element {
 							</Card>
 							<Card className="mt-4 w-full rounded-lg border p-4 sm:p-6">
 								<CardHeader>
-									<div className="text-lg font-bold">Danger Zone</div>
+									<div className="text-lg font-bold">
+										Danger Zone
+									</div>
 									<div className="text-sm text-muted-foreground">
-										The following actions are destructive and cannot be reversed.
+										The following actions are destructive
+										and cannot be reversed.
 									</div>
 								</CardHeader>
 								<CardContent>
@@ -536,63 +504,88 @@ export default function Canvas(): JSX.Element {
 												variant="destructive"
 												onClick={() =>
 													dispatch(
-														setOpenDeleteDiagramDialog({
-															open: true,
-														})
+														setOpenDeleteDiagramDialog(
+															{
+																open: true,
+															}
+														)
 													)
-												}>
+												}
+											>
 												Delete Diagram
 											</Button>
 										</AlertDialogTrigger>
 										<AlertDialogContent>
 											<AlertDialogHeader>
 												<AlertDialogTitle>
-													Are you sure you want to delete this diagram?
+													Are you sure you want to
+													delete this diagram?
 												</AlertDialogTitle>
 												<AlertDialogDescription>
-													This action cannot be undone. This will delete all parts and
-													settings associated with this diagram.
+													This action cannot be
+													undone. This will delete all
+													parts and settings
+													associated with this
+													diagram.
 												</AlertDialogDescription>
 											</AlertDialogHeader>
 											<AlertDialogFooter>
 												<AlertDialogCancel
 													onClick={() => {
 														dispatch(
-															setOpenDeleteDiagramDialog({
-																open: false,
-															})
+															setOpenDeleteDiagramDialog(
+																{
+																	open: false,
+																}
+															)
 														);
-													}}>
+													}}
+												>
 													Cancel
 												</AlertDialogCancel>
 												<AlertDialogAction className="px-0">
 													<Button
 														variant="destructive"
-														disabled={isLoadingDeleteDiagram}
+														disabled={
+															isLoadingDeleteDiagram
+														}
 														onClick={() => {
 															try {
-																deleteDiagram(id as string)
+																deleteDiagram(
+																	id as string
+																)
 																	.unwrap()
-																	.then(() => {
-																		dispatch(
-																			setOpenDeleteDiagramDialog({
-																				open: false,
-																			})
-																		);
-																		navigate("/dashboard");
-																		toast({
-																			title: "Diagram deleted",
-																			description: `Deleted diagram with id ${id}`,
-																		});
-																	});
+																	.then(
+																		() => {
+																			dispatch(
+																				setOpenDeleteDiagramDialog(
+																					{
+																						open: false,
+																					}
+																				)
+																			);
+																			navigate(
+																				"/dashboard"
+																			);
+																			toast(
+																				{
+																					title: "Diagram deleted",
+																					description: `Deleted diagram with id ${id}`,
+																				}
+																			);
+																		}
+																	);
 															} catch (error) {
 																toast({
-																	variant: "destructive",
+																	variant:
+																		"destructive",
 																	title: "Failed to delete diagram",
-																	description: error as string,
+																	description:
+																		error as string,
 																});
 															}
-														}}>
+														}}
+													>
 														{isLoadingDeleteDiagram && (
 															<Icons.spinner className="h-5 w-5 animate-spin mr-2" />
 														)}
@@ -609,7 +602,8 @@ export default function Canvas(): JSX.Element {
 				) : (
 					<ResizablePanelGroup
 						direction="horizontal"
-						className="h-full">
+						className="h-full"
+					>
 						<ResizablePanel defaultSize={20}>
 							{tab === Tab.PARTS ? (
 								<div className="flex flex-col w-fit-content p-2 space-y-2 h-full">
@@ -618,50 +612,70 @@ export default function Canvas(): JSX.Element {
 									</h1>
 									<ScrollArea
 										className="flex flex-col items-center overflow-y-auto whitespace-nowrap rounded-md border h-[80vh] dark:border-gray-800"
-										aria-orientation="vertical">
-										{Object.entries(partMappings).map(([name], idx) => (
-											<div
-												key={idx}
-												className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 cursor-pointer select-none dark:hover:bg-gray-800"
-												onClick={() => {
-													try {
-														addPart({
-															diagramId: id as string,
-															part: {
-																name,
-																angle: 0,
-																x: 24.513531513513513,
-																y: 24.513531513513513,
-																locked: false,
-															},
-														})
-															.unwrap()
-															.then((res: any) => {
-																toast({
-																	title: "Element added",
-																	action: (
-																		<Button
-																			onClick={() =>
-																				removePartHandler(res.data.diagram.parts[-1].id)
-																			}>
-																			Undo
-																		</Button>
-																	),
-																	description: `Added ${name} to canvas`,
-																	duration: 5000,
-																});
+										aria-orientation="vertical"
+									>
+										{Object.entries(partMappings).map(
+											([name], idx) => (
+												<div
+													key={idx}
+													className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 cursor-pointer select-none dark:hover:bg-gray-800"
+													onClick={() => {
+														try {
+															addPart({
+																diagramId:
+																	id as string,
+																part: {
+																	name,
+																	angle: 0,
+																	x: 24.513531513513513,
+																	y: 24.513531513513513,
+																	locked: false,
+																},
+															})
+																.unwrap()
+																.then(
+																	(
+																		res: any
+																	) => {
+																		toast({
+																			title: "Element added",
+																			action: (
+																				<Button
+																					onClick={() =>
+																						removePartHandler(
+																							res
+																								.data
+																								.diagram
+																								.parts[
+																								-1
+																							]
+																								.id
+																						)
+																					}
+																				>
+																					Undo
+																				</Button>
+																			),
+																			description: `Added ${name} to canvas`,
+																			duration: 5000,
+																		});
+																	}
+																);
+														} catch (error) {
+															toast({
+																variant:
+																	"destructive",
+																title: "Failed to add element",
+																description:
+																	error as string,
 															});
-													} catch (error) {
-														toast({
-															variant: "destructive",
-															title: "Failed to add element",
-															description: error as string,
-														});
-													}
-												}}>
-												{name}
-											</div>
-										))}
+														}
+													}}
+												>
+													{name}
+												</div>
+											)
+										)}
 									</ScrollArea>
 								</div>
 							) : tab === Tab.CODE ? (
@@ -674,7 +688,9 @@ export default function Canvas(): JSX.Element {
 									{isLoadingGenerateCodeMutation ? (
 										<div className="flex justify-center items-center">
 											<Icons.spinner className="h-6 w-6 animate-spin" />
-											<span className="ml-2 text-white">Generating code...</span>
+											<span className="ml-2 text-white">
+												Generating code...
+											</span>
 										</div>
 									) : generatedCode.code !== "" ? (
 										// <code className="text-white dark:text-gray-200 whitespace-pre-wrap">
@@ -689,7 +705,9 @@ export default function Canvas(): JSX.Element {
 												{generatedCode.beforeText}
 											</span>
 											<CopyBlock
-												language={generatedCode.language}
+												language={
+													generatedCode.language
+												}
 												text={generatedCode.code}
 												showLineNumbers={false}
 												theme={themeOption}
@@ -702,13 +720,16 @@ export default function Canvas(): JSX.Element {
 										</div>
 									) : (
 										<div className="flex justify-center items-center mt-3">
-											<span className="text-white">No code generated yet</span>
+											<span className="text-white">
+												No code generated yet
+											</span>
 										</div>
 									)}
 									<div className="flex flex-col items-center space-y-2">
 										<PredictionForm
 											microcontroller={
-												diagram?.microcontroller || Microcontroller.ATTiny85
+												diagram?.microcontroller ||
+												Microcontroller.ATTiny85
 											}
 											type="code"
 										/>
@@ -723,7 +744,8 @@ export default function Canvas(): JSX.Element {
 									<div className="flex flex-col items-center space-y-2">
 										<PredictionForm
 											microcontroller={
-												diagram?.microcontroller || Microcontroller.ATTiny85
+												diagram?.microcontroller ||
+												Microcontroller.ATTiny85
 											}
 											type="wiring"
 										/>
@@ -732,7 +754,9 @@ export default function Canvas(): JSX.Element {
 										{isLoadingGeneratePredictionMutation ? (
 											<div className="flex justify-center items-center">
 												<Icons.spinner className="h-6 w-6 animate-spin" />
-												<span className="ml-2 text-white">Generating prediction...</span>
+												<span className="ml-2 text-white">
+													Generating prediction...
+												</span>
 											</div>
 										) : generatedPrediction !== "" ? (
 											<pre className="mt-2 rounded-md p-4 bg-slate-950 dark:bg-gray-800 max-w-sm overflow-x-auto text-white">
@@ -740,7 +764,9 @@ export default function Canvas(): JSX.Element {
 											</pre>
 										) : (
 											<div className="flex justify-center items-center mt-3">
-												<span className="text-white">No prediction generated yet</span>
+												<span className="text-white">
+													No prediction generated yet
+												</span>
 											</div>
 										)}
 									</div>

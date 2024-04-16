@@ -11,15 +11,15 @@ export const connectionsApiSlice = apiSlice.injectEndpoints({
 	endpoints: (build) => ({
 		createConnection: build.mutation<
 			{ diagram: Diagram },
-			{ _id: string; connection: Connection }
+			{ diagramId: string; connection: Connection }
 		>({
-			queryFn: ({ _id, connection }) => {
+			queryFn: ({ diagramId, connection }) => {
 				const socket = getSocket(SocketNamespace.DIAGRAMS);
 
 				socket.emit(SocketEvent.CREATE_CONNECTION, {
 					token: localStorage.getItem("_token"),
 					diagram: {
-						_id,
+						_id: diagramId,
 					},
 					connection,
 				});
@@ -37,14 +37,14 @@ export const connectionsApiSlice = apiSlice.injectEndpoints({
 		}),
 		deleteConnection: build.mutation<
 			{ diagram: Diagram },
-			{ _id: string; connection: Connection }
+			{ diagramId: string; connection: Connection }
 		>({
-			queryFn: ({ _id, connection }) => {
+			queryFn: ({ diagramId, connection }) => {
 				const socket = getSocket(SocketNamespace.DIAGRAMS);
 				socket.emit(SocketEvent.DELETE_CONNECTION, {
 					token: localStorage.getItem("_token"),
 					diagram: {
-						_id,
+						_id: diagramId,
 					},
 					connection,
 				});
