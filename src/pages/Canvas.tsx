@@ -244,7 +244,7 @@ export default function Canvas(): JSX.Element {
 
 	return (
 		<div className="flex flex-1">
-			<aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
+			<aside className="w-14 flex-col border-r bg-background sm:flex sm:h-full">
 				<nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
 					<Tooltip>
 						<TooltipTrigger
@@ -319,7 +319,7 @@ export default function Canvas(): JSX.Element {
 					</Tooltip>
 				</nav>
 			</aside>
-			<div className="flex-1 relative ml-14 w-full">
+			<div className="flex-1 relative w-full">
 				{tab === Tab.SETTINGS ? (
 					<div className="flex flex-col w-fit-content p-2 space-y-2 px-4">
 						<PageHeader className="flex w-full flex-col-reverse items-center justify-between gap-4 px-6 md:flex-row">
