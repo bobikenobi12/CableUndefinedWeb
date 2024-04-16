@@ -263,14 +263,14 @@ function getMUXConnections(
 			const pin1 = device1.substring(5);
 			const pin2 = device2.substring(5);
 
-			let string = `${pin1}; ${pin2}; ${addingConnection}`;
+			let string = `${pin1};${pin2};${addingConnection}`;
 
 			if (device1Substr === "MUX1" && device1Substr === device2Substr) {
-				connections.push(`1000; ${string}`);
+				connections.push(`1000;${string}`);
 			}
 
 			if (device1Substr === "MUX2" && device1Substr === device2Substr) {
-				connections.push(`1001; ${string}`);
+				connections.push(`1001;${string}`);
 			}
 		}
 	});
@@ -498,14 +498,14 @@ export function addConnection(connection: [Pin, Pin]) {
 
 	if (path.length > 0) {
 		pathDescription = path
-			.map((vertex) => printDeviceSpecifications(vertex))
+			.map(vertex => printDeviceSpecifications(vertex))
 			.join(" -> ");
 
 		connections.push(...getMUXConnections(path, true));
 
 		let splitPath = pathDescription.split(" -> ");
 
-		connections[0] += `; ${splitPath[0].trim()}; ${splitPath[
+		connections[0] += `;${splitPath[0].trim()};${splitPath[
 			splitPath.length - 1
 		].trim()}`;
 	} else {
@@ -534,14 +534,14 @@ export function removeConnection(connection: [Pin, Pin]) {
 
 	if (path.length > 0) {
 		pathDescription = path
-			.map((vertex) => printDeviceSpecifications(vertex))
+			.map(vertex => printDeviceSpecifications(vertex))
 			.join(" -> ");
 
 		connections.push(...getMUXConnections(path, false));
 
 		let splitPath = pathDescription.split(" -> ");
 
-		connections[0] += `; ${splitPath[0].trim()}; ${splitPath[
+		connections[0] += `;${splitPath[0].trim()};${splitPath[
 			splitPath.length - 1
 		].trim()}`;
 	} else {
@@ -559,52 +559,52 @@ export function resetGraph() {
 }
 
 // ? Examples
-// const path1 = addConnection(["MCUH0", "MAINH11"]);
-// const path2 = addConnection(["MCUH1", "MAINH10"]);
-// const path3 = addConnection(["MCUH0", "MAINH11"]);
+const path1 = addConnection(["MCUH0", "MAINH11"]);
+const path2 = addConnection(["MCUH1", "MAINH10"]);
+const path3 = addConnection(["MCUH0", "MAINH11"]);
 
-// console.log("Path Description:", path1.pathDescription);
-// console.log("Connections:", path1.connections.join("   "));
+console.log("Path Description:", path1.pathDescription);
+console.log("Connections:", path1.connections.join("   "));
 
-// console.log("Path Description:", path2.pathDescription);
-// console.log("Connections:", path2.connections.join("   "));
+console.log("Path Description:", path2.pathDescription);
+console.log("Connections:", path2.connections.join("   "));
 
-// console.log("Path Description:", path3.pathDescription);
-// console.log("Connections:", path3.connections.join("   "));
+console.log("Path Description:", path3.pathDescription);
+console.log("Connections:", path3.connections.join("   "));
 
-// const removedPath1 = removeConnection(["MCUH0", "MAINH11"]);
-// console.log("Path Description:", removedPath1.pathDescription);
-// console.log("Connections:", removedPath1.connections.join("\n"));
-// console.log("Removed connection from MCUH0 to MAINH11");
+const removedPath1 = removeConnection(["MCUH0", "MAINH11"]);
+console.log("Path Description:", removedPath1.pathDescription);
+console.log("Connections:", removedPath1.connections.join("\n"));
+console.log("Removed connection from MCUH0 to MAINH11");
 
-// const path4 = addConnection(["MCUH0", "MAINH11"]);
-// console.log("Path Description:", path4.pathDescription);
-// console.log("Connections:", path4.connections.join("\n"));
+const path4 = addConnection(["MCUH0", "MAINH11"]);
+console.log("Path Description:", path4.pathDescription);
+console.log("Connections:", path4.connections.join("\n"));
 
-// const path5 = addConnection(["MCUH1", "MAINH10"]);
-// console.log("Path Description:", path5.pathDescription);
-// console.log("Connections:", path5.connections.join("\n"));
+const path5 = addConnection(["MCUH1", "MAINH10"]);
+console.log("Path Description:", path5.pathDescription);
+console.log("Connections:", path5.connections.join("\n"));
 
-// const removedPath2 = removeConnection(["MCUH1", "MAINH10"]);
-// console.log("Path Description:", removedPath2.pathDescription);
-// console.log("Connections:", removedPath2.connections.join("\n"));
-// console.log("Removed connection from MCUH1 to MAINH10");
+const removedPath2 = removeConnection(["MCUH1", "MAINH10"]);
+console.log("Path Description:", removedPath2.pathDescription);
+console.log("Connections:", removedPath2.connections.join("\n"));
+console.log("Removed connection from MCUH1 to MAINH10");
 
-// const path6 = addConnection(["MCUH1", "MAINH10"]);
-// console.log("Path Description:", path6.pathDescription);
-// console.log("Connections:", path6.connections.join("\n"));
+const path6 = addConnection(["MCUH1", "MAINH10"]);
+console.log("Path Description:", path6.pathDescription);
+console.log("Connections:", path6.connections.join("\n"));
 
-// resetGraph();
-// console.log("Reset Graph!");
+resetGraph();
+console.log("Reset Graph!");
 
-// const path7 = addConnection(["MCUH1", "MAINH10"]);
-// console.log("Path Description:", path7.pathDescription);
-// console.log("Connections:", path7.connections.join("\n"));
+const path7 = addConnection(["MCUH1", "MAINH10"]);
+console.log("Path Description:", path7.pathDescription);
+console.log("Connections:", path7.connections.join("\n"));
 
-// const path8 = addConnection(["MCUH1", "MAINH10"]);
-// console.log("Path Description:", path8.pathDescription);
-// console.log("Connections:", path8.connections.join("\n"));
+const path8 = addConnection(["MCUH1", "MAINH10"]);
+console.log("Path Description:", path8.pathDescription);
+console.log("Connections:", path8.connections.join("\n"));
 
-// const path9 = addConnection(["MCUH0", "MAINH11"]);
-// console.log("Path Description:", path9.pathDescription);
-// console.log("Connections:", path9.connections.join("\n"));
+const path9 = addConnection(["MCUH0", "MAINH11"]);
+console.log("Path Description:", path9.pathDescription);
+console.log("Connections:", path9.connections.join("\n"));
