@@ -256,38 +256,38 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 				nodes={nodes}
 				nodeTypes={nodeTypes}
 				onNodesChange={onNodesChange}
-				onNodeDragStop={(event, node) => {
-					event.preventDefault();
-					// console.log(node);
-					console.log({ node, diagramId: diagram._id });
-					const { x, y } = node.position;
-					console.log(node.data.id, "node id");
-					updatePart({
-						diagramId: diagram._id,
-						partId: node.data.id,
-						update: {
-							x,
-							y,
-							angle: 0,
-							locked: false,
-							name: node.data.name,
-						},
-					})
-						.unwrap()
-						.then(res => {
-							// dispatch(updatePartState({ diagram: res.diagram }));
-							toast({
-								title: "Success",
-								description: `Part "${node.data.name}" position updated successfully.`,
-							});
-						})
-						.catch(error => {
-							toast({
-								title: "Error",
-								description: "Failed to update part position.",
-							});
-						});
-				}}
+				// onNodeDragStop={(event, node) => {
+				// 	event.preventDefault();
+				// 	// console.log(node);
+				// 	console.log({ node, diagramId: diagram._id });
+				// 	const { x, y } = node.position;
+				// 	console.log(node.data.id, "node id");
+				// 	updatePart({
+				// 		diagramId: diagram._id,
+				// 		partId: node.data.id,
+				// 		update: {
+				// 			x,
+				// 			y,
+				// 			angle: 0,
+				// 			locked: false,
+				// 			name: node.data.name,
+				// 		},
+				// 	})
+				// 		.unwrap()
+				// 		.then(res => {
+				// 			// dispatch(updatePartState({ diagram: res.diagram }));
+				// 			toast({
+				// 				title: "Success",
+				// 				description: `Part "${node.data.name}" position updated successfully.`,
+				// 			});
+				// 		})
+				// 		.catch(error => {
+				// 			toast({
+				// 				title: "Error",
+				// 				description: "Failed to update part position.",
+				// 			});
+				// 		});
+				// }}
 				onNodesDelete={nodes => {
 					nodes.forEach(node => {
 						removePart({ diagramId: diagram._id, partId: node.id })
