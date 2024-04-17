@@ -8,7 +8,7 @@ import { SocketEvent, SocketNamespace } from "@/types/socket";
 import { getSocket } from "@/utils/socket";
 
 export const connectionsApiSlice = apiSlice.injectEndpoints({
-	endpoints: (build) => ({
+	endpoints: build => ({
 		createConnection: build.mutation<
 			{ diagram: Diagram },
 			{ diagramId: string; connection: Connection }
@@ -25,7 +25,7 @@ export const connectionsApiSlice = apiSlice.injectEndpoints({
 				});
 
 				return new Promise((resolve, reject) => {
-					socket.on(SocketEvent.CREATE_CONNECTION, (data) => {
+					socket.on(SocketEvent.CREATE_CONNECTION, data => {
 						if ("error" in data) {
 							reject(data.error);
 						} else {
@@ -34,6 +34,10 @@ export const connectionsApiSlice = apiSlice.injectEndpoints({
 					});
 				});
 			},
+			invalidatesTags: result =>
+				result
+					? [{ type: "Diagrams", id: result.diagram._id }]
+					: [{ type: "Diagrams", id: "LIST" }],
 		}),
 		deleteConnection: build.mutation<
 			{ diagram: Diagram },
@@ -50,7 +54,7 @@ export const connectionsApiSlice = apiSlice.injectEndpoints({
 				});
 
 				return new Promise((resolve, reject) => {
-					socket.on(SocketEvent.DELETE_CONNECTION, (data) => {
+					socket.on(SocketEvent.DELETE_CONNECTION, data => {
 						if ("error" in data) {
 							reject(data.error);
 						} else {
@@ -59,6 +63,10 @@ export const connectionsApiSlice = apiSlice.injectEndpoints({
 					});
 				});
 			},
+			invalidatesTags: result =>
+				result
+					? [{ type: "Diagrams", id: result.diagram._id }]
+					: [{ type: "Diagrams", id: "LIST" }],
 		}),
 	}),
 	overrideExisting: false,

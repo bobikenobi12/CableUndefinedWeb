@@ -40,7 +40,7 @@ export const diagramsSlice = createSlice({
 			const { diagramId, partId, x, y } = action.payload;
 			const parts = state.partsByDiagramId[diagramId];
 			if (parts) {
-				const partIndex = parts.findIndex((part) => part.id === partId);
+				const partIndex = parts.findIndex(part => part.id === partId);
 				if (partIndex !== -1) {
 					state.partsByDiagramId[diagramId][partIndex].x = x;
 					state.partsByDiagramId[diagramId][partIndex].y = y;
@@ -61,12 +61,12 @@ export const diagramsSlice = createSlice({
 		) => {
 			const { diagram } = action.payload;
 			state.partsByDiagramId[diagram._id] = diagram.parts;
-			state.diagrams = state.diagrams.map((d) =>
+			state.diagrams = state.diagrams.map(d =>
 				d._id === diagram._id ? diagram : d
 			);
 		},
 	},
-	extraReducers: (builder) => {
+	extraReducers: builder => {
 		builder.addMatcher(
 			diagramsApiSlice.endpoints.getDiagrams.matchFulfilled,
 			(state, action) => {
@@ -81,43 +81,10 @@ export const diagramsSlice = createSlice({
 			}
 		);
 		builder.addMatcher(
-			partsApiSlice.endpoints.addPart.matchFulfilled,
-			(state, action: { payload: { diagram: Diagram } }) => {
-				const { diagram } = action.payload;
-				state.partsByDiagramId[diagram._id] = diagram.parts;
-				state.diagrams = state.diagrams.map((d) =>
-					d._id === diagram._id ? diagram : d
-				);
-			}
-		);
-		// builder.addMatcher(
-		// 	partsApiSlice.endpoints.updatePart.matchFulfilled,
-		// 	(state, action: { payload: { diagram: Diagram } }) => {
-		// 		console.log(action.payload);
-		// 		const { diagram } = action.payload;
-		// 		console.log(diagram);
-		// 		state.partsByDiagramId[diagram._id] = diagram.parts;
-		// 		state.diagrams = state.diagrams.map((d) =>
-		// 			d._id === diagram._id ? diagram : d
-		// 		);
-		// 	}
-		// );
-		builder.addMatcher(
-			partsApiSlice.endpoints.removePart.matchFulfilled,
-			(state, action: { payload: { diagram: Diagram } }) => {
-				const { diagram } = action.payload;
-				state.partsByDiagramId[diagram._id] = diagram.parts;
-				state.diagrams = state.diagrams.map((d) =>
-					d._id === diagram._id ? diagram : d
-				);
-			}
-		);
-
-		builder.addMatcher(
 			connectionsApiSlice.endpoints.createConnection.matchFulfilled,
 			(state, action: { payload: { diagram: Diagram } }) => {
 				const { diagram } = action.payload;
-				state.diagrams = state.diagrams.map((d) =>
+				state.diagrams = state.diagrams.map(d =>
 					d._id === diagram._id ? diagram : d
 				);
 			}
@@ -126,7 +93,7 @@ export const diagramsSlice = createSlice({
 			connectionsApiSlice.endpoints.deleteConnection.matchFulfilled,
 			(state, action: { payload: { diagram: Diagram } }) => {
 				const { diagram } = action.payload;
-				state.diagrams = state.diagrams.map((d) =>
+				state.diagrams = state.diagrams.map(d =>
 					d._id === diagram._id ? diagram : d
 				);
 			}
@@ -139,16 +106,16 @@ export const { dragPart, setOpenDeleteDiagramDialog, updatePartState } =
 
 export const selectDiagrams = (state: RootState) => state.diagrams.diagrams;
 export const selectDiagramById = (state: RootState, id: string) =>
-	state.diagrams.diagrams.find((d) => d._id === id);
+	state.diagrams.diagrams.find(d => d._id === id);
 export const selectPartsByDiagramId = (state: RootState, id: string) =>
 	state.diagrams.partsByDiagramId[id];
 export const selectPartById = (
 	state: RootState,
 	diagramId: string,
 	partId: string
-) => state.diagrams.partsByDiagramId[diagramId].find((p) => p.id === partId);
+) => state.diagrams.partsByDiagramId[diagramId].find(p => p.id === partId);
 export const selectDiagramConnections = (state: RootState, id: string) =>
-	state.diagrams.diagrams.find((d) => d._id === id)?.connections;
+	state.diagrams.diagrams.find(d => d._id === id)?.connections;
 
 export const selectOpenDeleteDiagramDialog = (state: RootState) =>
 	state.diagrams.openDeleteDiagramDialog;

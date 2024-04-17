@@ -5,7 +5,7 @@ import type { Diagram } from "@/types/diagrams";
 import { Microcontroller } from "@/types/diagrams";
 
 export const diagramsApiSlice = apiSlice.injectEndpoints({
-	endpoints: (build) => ({
+	endpoints: build => ({
 		getDiagrams: build.query<Diagram[], void>({
 			queryFn: () => {
 				const socket = getSocket(SocketNamespace.DIAGRAMS);
@@ -27,12 +27,12 @@ export const diagramsApiSlice = apiSlice.injectEndpoints({
 					});
 				});
 			},
-			providesTags: (result) =>
+			providesTags: result =>
 				result
 					? [
 							...result.map(({ _id }) => ({
 								type: "Diagrams" as const,
-								_id,
+								id: _id,
 							})),
 							{ type: "Diagrams", id: "LIST" },
 					  ]
@@ -99,7 +99,7 @@ export const diagramsApiSlice = apiSlice.injectEndpoints({
 					});
 				});
 			},
-			invalidatesTags: (result) =>
+			invalidatesTags: result =>
 				result
 					? [{ type: "Diagrams", id: result._id }]
 					: [{ type: "Diagrams", id: "LIST" }],
@@ -127,7 +127,7 @@ export const diagramsApiSlice = apiSlice.injectEndpoints({
 					});
 				});
 			},
-			invalidatesTags: (result) =>
+			invalidatesTags: result =>
 				result
 					? [{ type: "Diagrams", id: result._id }]
 					: [{ type: "Diagrams", id: "LIST" }],

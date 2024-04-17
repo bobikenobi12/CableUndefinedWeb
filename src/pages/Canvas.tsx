@@ -105,7 +105,7 @@ import { useParams } from "react-router-dom";
 
 import { Pin } from "@/types/connections";
 import { Button } from "@/components/ui/button";
-import { Microcontroller } from "@/types/diagrams";
+import { Diagram, Microcontroller } from "@/types/diagrams";
 
 import { z } from "zod";
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -600,55 +600,52 @@ export default function Canvas(): JSX.Element {
 													key={idx}
 													className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 cursor-pointer select-none dark:hover:bg-gray-800"
 													onClick={() => {
-														try {
-															addPart({
-																diagramId:
-																	id as string,
-																part: {
-																	name,
-																	angle: 0,
-																	x: 0,
-																	y: 0,
-																	locked: false,
-																},
-															})
-																.unwrap()
-																.then(
-																	(
-																		res: any
-																	) => {
-																		toast({
-																			title: "Element added",
-																			action: (
-																				<Button
-																					onClick={() =>
-																						removePartHandler(
-																							res
-																								.data
-																								.diagram
-																								.parts[
-																								-1
-																							]
-																								.id
-																						)
-																					}>
-																					Undo
-																				</Button>
-																			),
-																			description: `Added ${name} to canvas`,
-																			duration: 5000,
-																		});
-																	}
-																);
-														} catch (error) {
-															toast({
-																variant:
-																	"destructive",
-																title: "Failed to add element",
-																description:
-																	error as string,
+														addPart({
+															diagramId:
+																id as string,
+															part: {
+																name,
+																angle: 0,
+																x: 0,
+																y: 0,
+																locked: false,
+															},
+														})
+															.unwrap()
+															.then(
+																(res: {
+																	diagram: Diagram;
+																}) => {
+																	toast({
+																		title: "Element added",
+																		action: (
+																			<Button
+																				onClick={() =>
+																					// give last part id
+																					removePartHandler(
+																						res.diagram.parts.slice(
+																							-1
+																						)[0]
+																							.id
+																					)
+																				}>
+																				Undo
+																			</Button>
+																		),
+																		description: `Added ${name} to canvas`,
+																		duration: 5000,
+																	});
+																}
+															)
+															.catch(error => {
+																toast({
+																	variant:
+																		"destructive",
+																	title: "Failed to add element",
+																	description:
+																		error as string,
+																});
 															});
-														}
 													}}>
 													{name}
 												</div>
