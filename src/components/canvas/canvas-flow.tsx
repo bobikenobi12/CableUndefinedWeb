@@ -53,12 +53,11 @@ function PartUpdaterNode(props: NodeProps<Part>) {
 
 	return (
 		<>
-			<Handle
-				type="target"
-				position={Position.Top}
-			/>
+			<Handle type="target" position={Position.Top} />
 			<div
-				className={`${props.data.locked ? "bg-red-500" : "bg-green-500"} ${
+				className={`${
+					props.data.locked ? "bg-red-500" : "bg-green-500"
+				} ${
 					props.selected ? "border border-dashed border-blue-500" : ""
 				}
 				h-64 w-64 items-center justify-center
@@ -76,10 +75,7 @@ function PartUpdaterNode(props: NodeProps<Part>) {
 					/>
 				</div>
 			</div>
-			<Handle
-				type="source"
-				position={Position.Bottom}
-			/>
+			<Handle type="source" position={Position.Bottom} />
 		</>
 	);
 }
@@ -98,10 +94,6 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 
 	const { portState, write } = useSerial();
 
-	const parts = useAppSelector(state =>
-		selectPartsByDiagramId(state, diagram._id)
-	);
-
 	const onNodesChange = useCallback(
 		(changes: NodeChange[]) => {
 			setNodes(nodes => applyNodeChanges<Part>(changes, nodes));
@@ -117,25 +109,18 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 	const [createConnection, { isLoading: isLoadingCreateConnectionMutation }] =
 		useCreateConnectionMutation();
 
-	const dispatch = useAppDispatch();
-
 	const { toast } = useToast();
-
-	// const connections = useAppSelector((state) =>
-	// 	selectDiagramConnections(state, diagram._id)
-	// );
 
 	const handleCustomEvent = (event: CustomEvent) => {
 		const { pin } = event.detail;
 		const { elementName, pinName, x, y } = pin;
 		const type = partTagsToConnectionStrings[pinName];
 
-		// check if diagram.connections contains the connection
-		// if it does, remove it
-
 		console.log(diagram.connections, "connections");
 		const connection = diagram.connections?.find(
-			(c) => c[0] === ((type + elementName) as Pin)
+			c =>
+				c[0] === ((type + elementName) as Pin) ||
+				c[1] === ((type + elementName) as Pin)
 		);
 
 		if (connection) {
@@ -154,7 +139,7 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 			return;
 		}
 
-		setConnection((prevConnection) => {
+		setConnection(prevConnection => {
 			console.log("setting connection");
 			// If both pins are empty, set the first pin
 			if (prevConnection[0] === "" && prevConnection[1] === "") {
@@ -185,18 +170,27 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 					createConnection({
 						diagramId: diagram._id,
 						connection: [connection[0], connection[1]],
-					}).unwrap();
+					})
+						.unwrap()
+						.then(() => {
+							toast({
+								title: "Connection created",
+								description: `Connection between ${connection[0]} and ${connection[1]} created`,
+							});
 
-					if (portState === "ready") {
-						write(result.connections.join("\n") + "\n");
-					}
+							if (portState === "ready") {
+								write(result.connections.join("\n") + "\n");
+							}
 
-					// TODO: add connection to the diagram or invalidate the diagram and refetch it
-
-					toast({
-						title: "Connection created",
-						description: `Connection between ${connection[0]} and ${connection[1]} created`,
-					});
+							// TODO: add connection to the diagram or invalidate the diagram and refetch it
+						})
+						.catch(error => {
+							toast({
+								variant: "destructive",
+								title: "Failed to create connection",
+								description: error as string,
+							});
+						});
 				} else {
 					toast({
 						variant: "destructive",
@@ -221,10 +215,6 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 			"pin-click",
 			handleCustomEvent as EventListener
 		);
-		document.addEventListener(
-			"pin-click",
-			handleCustomEvent as EventListener
-		);
 
 		return () => {
 			document.removeEventListener(
@@ -232,14 +222,14 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 				handleCustomEvent as EventListener
 			);
 		};
-	}, []);
+	}, [handleCustomEvent]);
 
 	useEffect(() => {
-		console.log(parts, "parts changed");
-		if (parts) {
+		console.log(diagram.parts, "parts changed");
+		if (diagram.parts) {
 			console.log(diagram, "diagram changed");
 			setNodes(
-				parts.map(part => ({
+				diagram.parts.map(part => ({
 					id: part.id,
 					type: "partUpdater",
 					data: {
@@ -253,7 +243,7 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 				}))
 			);
 		}
-	}, [parts, diagram, setNodes]);
+	}, [diagram, setNodes]);
 
 	return (
 		<div className="flex-1 relative h-full">
@@ -269,11 +259,12 @@ export default function CanvasFlow({ diagram }: { diagram: Diagram }) {
 				onNodeDragStop={(event, node) => {
 					event.preventDefault();
 					// console.log(node);
-					// console.log({ node, diagramId: diagram._id });
+					console.log({ node, diagramId: diagram._id });
 					const { x, y } = node.position;
+					console.log(node.data.id, "node id");
 					updatePart({
 						diagramId: diagram._id,
-						partId: node.id,
+						partId: node.data.id,
 						update: {
 							x,
 							y,

@@ -298,6 +298,35 @@ function parsePin(pin: Pin): [Device, number] {
 		pinNumber += isMCU ? 4 : 12;
 	}
 
+	if (isMCU) {
+		switch (pinNumber) {
+			case 0:
+				pinNumber = 4;
+				break;
+			case 1:
+				pinNumber = 5;
+				break;
+			case 2:
+				pinNumber = 6;
+				break;
+			case 3:
+				pinNumber = 7;
+				break;
+			case 4:
+				pinNumber = 3;
+				break;
+			case 5:
+				pinNumber = 2;
+				break;
+			case 6:
+				pinNumber = 1;
+				break;
+			case 7:
+				pinNumber = 0;
+				break;
+		}
+	}
+
 	return [device, pinNumber];
 }
 
@@ -486,8 +515,8 @@ for (let i = 0; i < 2; i++) {
 export function addConnection(connection: [Pin, Pin]) {
 	const [startPin, endPin] = connection;
 
-	const [startDevice, startPinNumber] = parsePin(startPin);
-	const [endDevice, endPinNumber] = parsePin(endPin);
+	let [startDevice, startPinNumber] = parsePin(startPin);
+	let [endDevice, endPinNumber] = parsePin(endPin);
 
 	const startVertex = getGraphVertexID(startDevice, "p", startPinNumber);
 	const endVertex = getGraphVertexID(endDevice, "p", endPinNumber);
@@ -505,9 +534,78 @@ export function addConnection(connection: [Pin, Pin]) {
 
 		let splitPath = pathDescription.split(" -> ");
 
-		connections[0] += `;${splitPath[0].trim()};${splitPath[
-			splitPath.length - 1
-		].trim()}`;
+		let startLED = splitPath[0].trim();
+		let endLED = splitPath[splitPath.length - 1].trim();
+
+		if (startPin.startsWith("MCU")) {
+			switch (startPinNumber) {
+				case 0:
+					startPinNumber = 7;
+					break;
+				case 1:
+					startPinNumber = 6;
+					break;
+				case 2:
+					startPinNumber = 5;
+					break;
+				case 3:
+					startPinNumber = 4;
+					break;
+				case 4:
+					startPinNumber = 0;
+					break;
+				case 5:
+					startPinNumber = 1;
+					break;
+				case 6:
+					startPinNumber = 2;
+					break;
+				case 7:
+					startPinNumber = 3;
+					break;
+
+				default:
+					break;
+			}
+
+			startLED = `MCUBreadboard ${startPinNumber}`;
+		}
+
+		if (endPin.startsWith("MCU")) {
+			switch (endPinNumber) {
+				case 0:
+					endPinNumber = 7;
+					break;
+				case 1:
+					endPinNumber = 6;
+					break;
+				case 2:
+					endPinNumber = 5;
+					break;
+				case 3:
+					endPinNumber = 4;
+					break;
+				case 4:
+					endPinNumber = 0;
+					break;
+				case 5:
+					endPinNumber = 1;
+					break;
+				case 6:
+					endPinNumber = 2;
+					break;
+				case 7:
+					endPinNumber = 3;
+					break;
+
+				default:
+					break;
+			}
+
+			endLED = `MCUBreadboard ${endPinNumber}`;
+		}
+
+		connections[0] += `;${startLED};${endLED}`;
 	} else {
 		pathDescription = `No path found from ${printDeviceSpecifications(
 			startVertex
@@ -520,8 +618,8 @@ export function addConnection(connection: [Pin, Pin]) {
 export function removeConnection(connection: [Pin, Pin]) {
 	const [startPin, endPin] = connection;
 
-	const [startDevice, startPinNumber] = parsePin(startPin);
-	const [endDevice, endPinNumber] = parsePin(endPin);
+	let [startDevice, startPinNumber] = parsePin(startPin);
+	let [endDevice, endPinNumber] = parsePin(endPin);
 
 	const startVertex = getGraphVertexID(startDevice, "p", startPinNumber);
 	const endVertex = getGraphVertexID(endDevice, "p", endPinNumber);
@@ -541,9 +639,78 @@ export function removeConnection(connection: [Pin, Pin]) {
 
 		let splitPath = pathDescription.split(" -> ");
 
-		connections[0] += `;${splitPath[0].trim()};${splitPath[
-			splitPath.length - 1
-		].trim()}`;
+		let startLED = splitPath[0].trim();
+		let endLED = splitPath[splitPath.length - 1].trim();
+
+		if (startPin.startsWith("MCU")) {
+			switch (startPinNumber) {
+				case 0:
+					startPinNumber = 7;
+					break;
+				case 1:
+					startPinNumber = 6;
+					break;
+				case 2:
+					startPinNumber = 5;
+					break;
+				case 3:
+					startPinNumber = 4;
+					break;
+				case 4:
+					startPinNumber = 0;
+					break;
+				case 5:
+					startPinNumber = 1;
+					break;
+				case 6:
+					startPinNumber = 2;
+					break;
+				case 7:
+					startPinNumber = 3;
+					break;
+
+				default:
+					break;
+			}
+
+			startLED = `MCUBreadboard ${startPinNumber}`;
+		}
+
+		if (endPin.startsWith("MCU")) {
+			switch (endPinNumber) {
+				case 0:
+					endPinNumber = 7;
+					break;
+				case 1:
+					endPinNumber = 6;
+					break;
+				case 2:
+					endPinNumber = 5;
+					break;
+				case 3:
+					endPinNumber = 4;
+					break;
+				case 4:
+					endPinNumber = 0;
+					break;
+				case 5:
+					endPinNumber = 1;
+					break;
+				case 6:
+					endPinNumber = 2;
+					break;
+				case 7:
+					endPinNumber = 3;
+					break;
+
+				default:
+					break;
+			}
+
+			endLED = `MCUBreadboard ${endPinNumber}`;
+		}
+
+		connections[0] += `;${startLED};${endLED}`;
 	} else {
 		pathDescription = `No path found from ${printDeviceSpecifications(
 			startVertex

@@ -7,7 +7,7 @@ import { SocketEvent, SocketNamespace } from "@/types/socket";
 import { getSocket } from "@/utils/socket";
 
 export const partsApiSlice = apiSlice.injectEndpoints({
-	endpoints: (build) => ({
+	endpoints: build => ({
 		addPart: build.mutation<
 			{ diagram: Diagram },
 			{ diagramId: string; part: AddPart }
@@ -24,7 +24,7 @@ export const partsApiSlice = apiSlice.injectEndpoints({
 				});
 
 				return new Promise((resolve, reject) => {
-					socket.on(SocketEvent.ADD_PART, (data) => {
+					socket.on(SocketEvent.ADD_PART, data => {
 						if ("error" in data) {
 							reject(data.error);
 						} else {
@@ -34,7 +34,7 @@ export const partsApiSlice = apiSlice.injectEndpoints({
 					});
 				});
 			},
-			invalidatesTags: (result) =>
+			invalidatesTags: result =>
 				result
 					? [{ type: "Diagrams", id: result.diagram._id }]
 					: [{ type: "Diagrams", id: "LIST" }],
@@ -57,7 +57,7 @@ export const partsApiSlice = apiSlice.injectEndpoints({
 				});
 
 				return new Promise((resolve, reject) => {
-					socket.on(SocketEvent.UPDATE_PART, (data) => {
+					socket.on(SocketEvent.UPDATE_PART, data => {
 						if ("error" in data) {
 							reject(data.error);
 						} else {
@@ -67,7 +67,7 @@ export const partsApiSlice = apiSlice.injectEndpoints({
 					});
 				});
 			},
-			invalidatesTags: (result) =>
+			invalidatesTags: result =>
 				result
 					? [{ type: "Diagrams", id: result.diagram._id }]
 					: [{ type: "Diagrams", id: "LIST" }],
@@ -90,7 +90,7 @@ export const partsApiSlice = apiSlice.injectEndpoints({
 				});
 
 				return new Promise((resolve, reject) => {
-					socket.on(SocketEvent.REMOVE_PART, (data) => {
+					socket.on(SocketEvent.REMOVE_PART, data => {
 						if ("error" in data) {
 							reject(data.error);
 						} else {
@@ -99,10 +99,10 @@ export const partsApiSlice = apiSlice.injectEndpoints({
 					});
 				});
 			},
-			// invalidatesTags: (result) =>
-			// 	result
-			// 		? [{ type: "Diagrams", id: result.diagram._id }]
-			// 		: [{ type: "Diagrams", id: "LIST" }],
+			invalidatesTags: result =>
+				result
+					? [{ type: "Diagrams", id: result.diagram._id }]
+					: [{ type: "Diagrams", id: "LIST" }],
 		}),
 	}),
 });
