@@ -1,5 +1,3 @@
-import React, { useEffect } from "react";
-
 import {
 	ResizableHandle,
 	ResizablePanel,
@@ -79,11 +77,6 @@ import {
 } from "@/redux/features/parts/parts-api-slice";
 
 import {
-	useCreateConnectionMutation,
-	useDeleteConnectionMutation,
-} from "@/redux/features/connections/connections-api-slice";
-
-import {
 	useLazyCodeQuery,
 	useLazyWiringQuery,
 } from "@/redux/features/predictions/predictions-api-slice";
@@ -93,17 +86,15 @@ import {
 	selectTab,
 	selectCode,
 	selectPrediction,
+	resetGeneratedCode,
+	resetPrediction,
 } from "@/redux/features/predictions/predictions-slice";
 import { PredictionForm } from "@/components/canvas/prediction-form";
 
-import {
-	partMappings,
-	partTagsToConnectionStrings,
-} from "@/types/wokwi-elements-mapping";
+import { partMappings } from "@/types/wokwi-elements-mapping";
 
 import { useParams } from "react-router-dom";
 
-import { Pin } from "@/types/connections";
 import { Button } from "@/components/ui/button";
 import { Diagram, Microcontroller } from "@/types/diagrams";
 
@@ -116,8 +107,6 @@ import { useNavigate } from "react-router-dom";
 import { CopyBlock, atomOneDark, atomOneLight } from "react-code-blocks";
 
 import CanvasFlow from "@/components/canvas/canvas-flow";
-import { useSerial } from "@/contexts/SerialContext";
-import { addConnection } from "@/utils/pathfinding";
 
 const updateDiagramSchema = z.object({
 	name: z.string().min(1),
@@ -161,37 +150,26 @@ export default function Canvas(): JSX.Element {
 		useAddPartMutation();
 
 	const { theme } = useTheme();
-	const { toast, dismiss, toasts } = useToast();
+	const { toast } = useToast();
 
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
-
-	useEffect(() => {
-		if (isLoadingRemovePartMutation) {
-			toast({
-				title: "Removing element",
-				description: `Removing ${id} from canvas`,
-			});
-		}
-	}, [isLoadingRemovePartMutation]);
-
-	useEffect(() => {
-		if (!isLoadingRemovePartMutation) {
-			setTimeout(() => {
-				dismiss();
-			}, 3000);
-		}
-	}, [isLoadingRemovePartMutation]);
 
 	function removePartHandler(partId: string) {
 		try {
 			removePart({
 				diagramId: id as string,
 				partId,
+			}).then(() => {
+				toast({
+					title: "Element removed",
+					description: `Removed ${partId} from canvas`,
+				});
 			});
 			toast({
-				title: "Element removed",
-				description: `Removed ${partId} from canvas`,
+				open: isLoadingRemovePartMutation,
+				title: "Removing element",
+				description: `Removing ${partId} from canvas`,
 			});
 		} catch (error) {
 			toast({
@@ -600,52 +578,63 @@ export default function Canvas(): JSX.Element {
 													key={idx}
 													className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 cursor-pointer select-none dark:hover:bg-gray-800"
 													onClick={() => {
-														addPart({
-															diagramId:
-																id as string,
-															part: {
-																name,
-																angle: 0,
-																x: 0,
-																y: 0,
-																locked: false,
-															},
-														})
-															.unwrap()
-															.then(
-																(res: {
-																	diagram: Diagram;
-																}) => {
-																	toast({
-																		title: "Element added",
-																		action: (
-																			<Button
-																				onClick={() =>
-																					// give last part id
-																					removePartHandler(
-																						res.diagram.parts.slice(
-																							-1
-																						)[0]
-																							.id
-																					)
-																				}>
-																				Undo
-																			</Button>
-																		),
-																		description: `Added ${name} to canvas`,
-																		duration: 5000,
-																	});
-																}
-															)
-															.catch(error => {
-																toast({
-																	variant:
-																		"destructive",
-																	title: "Failed to add element",
-																	description:
-																		error as string,
-																});
+														try {
+															addPart({
+																diagramId:
+																	id as string,
+																part: {
+																	name,
+																	angle: 0,
+																	x: 0,
+																	y: 0,
+																	locked: false,
+																},
+															})
+																.unwrap()
+																.then(
+																	(res: {
+																		diagram: Diagram;
+																	}) => {
+																		toast({
+																			title: "Element added",
+																			action: (
+																				<Button
+																					onClick={() =>
+																						// give last part id
+																						removePartHandler(
+																							res.diagram.parts.slice(
+																								-1
+																							)[0]
+																								.id
+																						)
+																					}>
+																					Undo
+																				</Button>
+																			),
+																			description: `Added ${name} to canvas`,
+																			duration: 5000,
+																		});
+																	}
+																);
+
+															toast({
+																open: isLoadingAddPartMutation,
+																title: "Element is being added",
+																description:
+																	"Adding element to the canvas",
+																action: (
+																	<Icons.spinner className="h-4 w-4 animate-spin" />
+																),
 															});
+														} catch (error) {
+															toast({
+																variant:
+																	"destructive",
+																title: "Failed to add element",
+																description:
+																	error as string,
+															});
+														}
 													}}>
 													{name}
 												</div>
@@ -659,7 +648,6 @@ export default function Canvas(): JSX.Element {
 										Generate Code
 									</h1>
 
-									{/* <pre className="mt-2 rounded-md p-4 bg-slate-950 dark:bg-gray-800 max-w-sm overflow-x-auto h-96"> */}
 									{isLoadingGenerateCodeMutation ? (
 										<div className="flex justify-center items-center">
 											<Icons.spinner className="h-6 w-6 animate-spin" />
@@ -668,13 +656,6 @@ export default function Canvas(): JSX.Element {
 											</span>
 										</div>
 									) : generatedCode.code !== "" ? (
-										// <code className="text-white dark:text-gray-200 whitespace-pre-wrap">
-										// 	{JSON.stringify(
-										// 		generatedCode,
-										// 		null,
-										// 		2
-										// 	)}
-										// </code>
 										<div className="flex flex-1 flex-col items-center w-full overflow-y-scroll px-2 py-3 rounded-md bg-gray-100 dark:bg-gray-800">
 											<span className="text-sm font-bold text-muted-foreground mb-3">
 												{generatedCode.beforeText}
@@ -700,16 +681,30 @@ export default function Canvas(): JSX.Element {
 											</span>
 										</div>
 									)}
-									<div className="flex flex-col items-center space-y-2">
-										<PredictionForm
-											microcontroller={
-												diagram?.microcontroller ||
-												Microcontroller.ATTiny85
-											}
-											type="code"
-										/>
-									</div>
-									{/* </pre> */}
+									{generatedCode.code !== "" && (
+										<div className="flex justify-center items-center mt-3">
+											<Button
+												variant="secondary"
+												onClick={() => {
+													dispatch(
+														resetGeneratedCode()
+													);
+												}}>
+												Generate New Code
+											</Button>
+										</div>
+									)}
+									{generatedCode.code === "" && (
+										<div className="flex flex-col items-center space-y-2">
+											<PredictionForm
+												microcontroller={
+													diagram?.microcontroller ||
+													Microcontroller.ATTiny85
+												}
+												type="code"
+											/>
+										</div>
+									)}
 								</div>
 							) : tab === Tab.PREDICTION ? (
 								<div className="flex flex-col w-fit-content p-2 space-y-2">

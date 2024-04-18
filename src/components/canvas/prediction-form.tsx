@@ -64,7 +64,7 @@ export function PredictionForm({ type, microcontroller }: Props) {
 
 	const { toast, dismiss } = useToast();
 
-	const onSubmitGenerateCode: SubmitHandler<CodeFormValues> = (data) => {
+	const onSubmitGenerateCode: SubmitHandler<CodeFormValues> = data => {
 		try {
 			generateCode({
 				microcontroller,
@@ -72,14 +72,14 @@ export function PredictionForm({ type, microcontroller }: Props) {
 				prompt: data.prompt,
 			})
 				.unwrap()
-				.then((res) => {
+				.then(() => {
 					toast({
 						title: "Code generated",
 						description: "Code generated successfully",
 					});
-					dismiss("generate-code");
 				});
 			toast({
+				open: isLoadingGenerateCodeMutation,
 				title: "Code is being generated",
 				description: "Generating code for the selected module",
 				action: <Icons.spinner className="h-4 w-4 animate-spin" />,
@@ -93,21 +93,21 @@ export function PredictionForm({ type, microcontroller }: Props) {
 		}
 	};
 
-	const onSubmitGenerateWiring: SubmitHandler<WiringFormValues> = (data) => {
+	const onSubmitGenerateWiring: SubmitHandler<WiringFormValues> = data => {
 		try {
 			generatePrediction({
 				microcontroller,
 				module: data.module,
 			})
 				.unwrap()
-				.then((res) => {
+				.then(res => {
 					toast({
 						title: "Wiring generated",
 						description: "Wiring generated successfully",
 					});
-					dismiss("generate-wiring");
 				});
 			toast({
+				open: isLoadingGeneratePredictionMutation,
 				title: "Wiring is being generated",
 				description: "Generating wiring for the selected module",
 				action: <Icons.spinner className="h-4 w-4 animate-spin" />,
@@ -128,7 +128,7 @@ export function PredictionForm({ type, microcontroller }: Props) {
 						? (onSubmitGenerateWiring as any)
 						: (onSubmitGenerateCode as any)
 				)}
-			>
+				className="space-y-4">
 				<FormField
 					control={form.control}
 					name="module"
@@ -138,8 +138,7 @@ export function PredictionForm({ type, microcontroller }: Props) {
 							<FormControl>
 								<Select
 									{...field}
-									onValueChange={field.onChange}
-								>
+									onValueChange={field.onChange}>
 									<SelectTrigger>
 										<SelectValue placeholder="Select a module" />
 									</SelectTrigger>
@@ -153,8 +152,7 @@ export function PredictionForm({ type, microcontroller }: Props) {
 											].map((module, idx) => (
 												<SelectItem
 													key={idx}
-													value={module}
-												>
+													value={module}>
 													{module}
 												</SelectItem>
 											))}
@@ -190,7 +188,13 @@ export function PredictionForm({ type, microcontroller }: Props) {
 						)}
 					/>
 				)}
-				<Button type="submit" disabled={form.formState.isSubmitting}>
+				<Button
+					type="submit"
+					disabled={
+						form.formState.isSubmitting ||
+						isLoadingGenerateCodeMutation ||
+						isLoadingGeneratePredictionMutation
+					}>
 					{type === "wiring" ? "Generate Wiring" : "Generate Code"}
 				</Button>
 			</form>

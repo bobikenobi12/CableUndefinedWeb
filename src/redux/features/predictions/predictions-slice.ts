@@ -44,8 +44,14 @@ export const predictionsSlice = createSlice({
 			state.tab = action.payload;
 			localStorage.setItem("indexTab", action.payload);
 		},
+		resetGeneratedCode: state => {
+			state.code = initialState.code;
+		},
+		resetPrediction: state => {
+			state.prediction = initialState.prediction;
+		},
 	},
-	extraReducers: (builder) => {
+	extraReducers: builder => {
 		// builder.addMatcher(
 		// 	indexApiSlice.endpoints.predictions.matchPending,
 		//     (state, action) => {
@@ -77,7 +83,8 @@ export const predictionsSlice = createSlice({
 	},
 });
 
-export const { setTab } = predictionsSlice.actions;
+export const { setTab, resetGeneratedCode, resetPrediction } =
+	predictionsSlice.actions;
 
 export const selectTab = (state: RootState) => state.predictions.tab;
 export const selectPrediction = (state: RootState) =>
