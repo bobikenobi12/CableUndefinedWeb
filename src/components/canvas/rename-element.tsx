@@ -83,11 +83,15 @@ export const RenameElementForm = ({
 	const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
 		try {
 			updatePart({
-				_id: id as string,
-				part: {
-					...part,
+				diagramId: id as string,
+				update: {
+					angle: part.angle,
+					locked: part.locked,
+					x: part.x,
+					y: part.y,
 					name: data.name,
 				},
+				partId: part.id,
 			});
 			toast({
 				title: "Element renamed",
@@ -132,17 +136,12 @@ export const RenameElementForm = ({
 
 				<DialogFooter className="flex justify-end items-center space-x-2 mt-2 rounded-b-md">
 					<DialogClose asChild>
-						<Button
-							type="button"
-							variant="secondary">
+						<Button type="button" variant="secondary">
 							Close
 						</Button>
 					</DialogClose>
 					<DialogClose asChild>
-						<Button
-							type="submit"
-							size="sm"
-							className="px-3">
+						<Button type="submit" size="sm" className="px-3">
 							Rename
 						</Button>
 					</DialogClose>
@@ -241,7 +240,7 @@ export default function ElementContextMenu({
 						onClick={() => {
 							try {
 								removePart({
-									_id: id as string,
+									diagramId: id as string,
 									partId: part.id,
 								});
 								toast({
@@ -264,12 +263,11 @@ export default function ElementContextMenu({
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
 					<DialogTitle>Rename Element</DialogTitle>
-					<DialogDescription>Enter a new name for the element</DialogDescription>
+					<DialogDescription>
+						Enter a new name for the element
+					</DialogDescription>
 				</DialogHeader>
-				<RenameElementForm
-					part={part}
-					initialName={part.name}
-				/>
+				<RenameElementForm part={part} initialName={part.name} />
 			</DialogContent>
 		</Dialog>
 	);
